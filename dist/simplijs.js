@@ -24,10 +24,14 @@ var SimpliJS = (() => {
     component: () => component,
     createApp: () => createApp,
     createRouter: () => createRouter,
+    domPatch: () => domPatch,
     effect: () => effect,
     error: () => error,
+    fadeIn: () => fadeIn,
+    fadeOut: () => fadeOut,
+    hydrate: () => hydrate,
     reactive: () => reactive,
-    render: () => render,
+    render: () => domPatch,
     warn: () => warn
   });
 
@@ -36,8 +40,18 @@ var SimpliJS = (() => {
   function effect(fn) {
     const effectFn = () => {
       activeEffect = effectFn;
-      fn();
-      activeEffect = null;
+      try {
+        fn();
+      } catch (err) {
+        if (err instanceof TypeError && (err.message.includes("undefined") || err.message.includes("null"))) {
+          console.error(`\u{1F50D} [SimpliJS Error]: ${err.message}
+\u{1F4A1} Tip: You might be accessing a property on an undefined reactive state. Did you forget to initialize it?`);
+        } else {
+          console.error(err);
+        }
+      } finally {
+        activeEffect = null;
+      }
     };
     effectFn();
   }
@@ -67,21 +81,98 @@ var SimpliJS = (() => {
       }
     });
   }
+  reactive.async = function(fn) {
+    const state = reactive({
+      loading: true,
+      error: null,
+      value: null
+    });
+    Promise.resolve(fn()).then((value) => {
+      state.value = value;
+      state.error = null;
+    }).catch((error2) => {
+      state.error = error2;
+      state.value = null;
+    }).finally(() => {
+      state.loading = false;
+    });
+    return state;
+  };
 
   // src/renderer.js
-  function render(container, html) {
+  function domPatch(container, html) {
     if (typeof container === "string") {
       container = document.querySelector(container);
     }
-    if (container) {
-      container.innerHTML = html;
-    } else {
+    if (!container) {
       console.warn(`[SimpliJS warn]: render container not found`);
+      return;
+    }
+    if (!container.hasChildNodes()) {
+      container.innerHTML = html;
+      return;
+    }
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const newNodes = Array.from(template.content.childNodes);
+    const oldNodes = Array.from(container.childNodes);
+    function patch(oldNode, newNode) {
+      if (oldNode.nodeType !== newNode.nodeType || oldNode.nodeName !== newNode.nodeName) {
+        oldNode.replaceWith(newNode.cloneNode(true));
+        return;
+      }
+      if (oldNode.nodeType === Node.TEXT_NODE) {
+        if (oldNode.textContent !== newNode.textContent) {
+          oldNode.textContent = newNode.textContent;
+        }
+        return;
+      }
+      const oldAttrs = oldNode.attributes;
+      const newAttrs = newNode.attributes;
+      for (let i = oldAttrs.length - 1; i >= 0; i--) {
+        const name = oldAttrs[i].name;
+        if (!newNode.hasAttribute(name)) {
+          oldNode.removeAttribute(name);
+        }
+      }
+      for (let i = 0; i < newAttrs.length; i++) {
+        const name = newAttrs[i].name;
+        const val = newAttrs[i].value;
+        if (oldNode.getAttribute(name) !== val) {
+          oldNode.setAttribute(name, val);
+        }
+      }
+      if (oldNode.tagName === "INPUT" || oldNode.tagName === "TEXTAREA") {
+        if (oldNode.value !== newNode.value) oldNode.value = newNode.value;
+      }
+      const oldChildren = Array.from(oldNode.childNodes);
+      const newChildren = Array.from(newNode.childNodes);
+      const max2 = Math.max(oldChildren.length, newChildren.length);
+      for (let i = 0; i < max2; i++) {
+        if (!oldChildren[i]) {
+          oldNode.appendChild(newChildren[i].cloneNode(true));
+        } else if (!newChildren[i]) {
+          oldNode.removeChild(oldChildren[i]);
+        } else {
+          patch(oldChildren[i], newChildren[i]);
+        }
+      }
+    }
+    const max = Math.max(oldNodes.length, newNodes.length);
+    for (let i = 0; i < max; i++) {
+      if (!oldNodes[i]) {
+        container.appendChild(newNodes[i].cloneNode(true));
+      } else if (!newNodes[i]) {
+        container.removeChild(oldNodes[i]);
+      } else {
+        patch(oldNodes[i], newNodes[i]);
+      }
     }
   }
 
   // src/component.js
   function component(name, setup) {
+    if (typeof customElements === "undefined") return;
     if (customElements.get(name)) {
       console.warn(`[SimpliJS warn]: Component ${name} already registered.`);
       return;
@@ -91,13 +182,38 @@ var SimpliJS = (() => {
         super();
       }
       connectedCallback() {
-        const renderFn = setup(this);
-        if (typeof renderFn === "function") {
+        const result = setup(this);
+        if (typeof result === "function") {
           effect(() => {
-            this.innerHTML = renderFn();
+            domPatch(this, result());
           });
-        } else if (typeof renderFn === "string") {
-          this.innerHTML = renderFn;
+        } else if (typeof result === "string") {
+          this.innerHTML = result;
+        } else if (typeof result === "object" && result !== null) {
+          this._lifecycle = result;
+          Object.keys(result).forEach((key) => {
+            if (typeof result[key] === "function" && !["onMount", "onUpdate", "onDestroy", "render"].includes(key)) {
+              this[key] = result[key].bind(this);
+            }
+          });
+          if (this._lifecycle.onMount) {
+            this._lifecycle.onMount();
+          }
+          if (this._lifecycle.render) {
+            let isFirstUpdate = true;
+            effect(() => {
+              if (!isFirstUpdate && this._lifecycle.onUpdate) {
+                this._lifecycle.onUpdate();
+              }
+              domPatch(this, this._lifecycle.render());
+              isFirstUpdate = false;
+            });
+          }
+        }
+      }
+      disconnectedCallback() {
+        if (this._lifecycle && this._lifecycle.onDestroy) {
+          this._lifecycle.onDestroy();
         }
       }
     }
@@ -106,20 +222,48 @@ var SimpliJS = (() => {
 
   // src/router.js
   function createRouter(routes, rootElement = "#app") {
-    function handleRoute() {
+    let transitionType = null;
+    async function handleRoute() {
       const hash = window.location.hash || "#/";
-      const route = routes[hash] || routes["*"];
+      let route = routes[hash];
+      if (!route && hash.startsWith("#/")) {
+        const path = hash === "#/" ? "index" : hash.slice(2);
+        try {
+          const response = await fetch(`/pages/${path}.html`);
+          if (response.ok) {
+            route = await response.text();
+          } else {
+            route = routes["*"] || "<h1>404 Not Found</h1>";
+          }
+        } catch (e) {
+          route = routes["*"] || "<h1>404 Not Found</h1>";
+        }
+      } else if (!route) {
+        route = routes["*"] || "<h1>404 Not Found</h1>";
+      }
+      const container = typeof rootElement === "string" ? document.querySelector(rootElement) : rootElement;
+      if (transitionType && container) {
+        container.style.transition = "opacity 0.2s ease-out, transform 0.2s ease-out";
+        container.style.opacity = "0";
+        if (transitionType === "slide") container.style.transform = "translateX(-20px)";
+        await new Promise((r) => setTimeout(r, 200));
+      }
       if (route) {
         if (typeof route === "function") {
-          const result = route();
+          const result = await route();
           if (typeof result === "string") {
-            render(rootElement, result);
+            domPatch(rootElement, result);
           }
         } else {
-          render(rootElement, route);
+          domPatch(rootElement, route);
         }
-      } else {
-        render(rootElement, "<h1>404 Not Found</h1>");
+      }
+      if (transitionType && container) {
+        if (transitionType === "slide") container.style.transform = "translateX(20px)";
+        requestAnimationFrame(() => {
+          container.style.opacity = "1";
+          container.style.transform = "translateX(0)";
+        });
       }
     }
     window.addEventListener("hashchange", handleRoute);
@@ -127,8 +271,37 @@ var SimpliJS = (() => {
     return {
       navigate(hash) {
         window.location.hash = hash;
+      },
+      transition(type) {
+        transitionType = type;
+        return this;
       }
     };
+  }
+
+  // src/utils.js
+  function warn(msg, tip = "") {
+    console.warn(`\u26A0\uFE0F [SimpliJS Warn]: ${msg}${tip ? `
+\u{1F4A1} Tip: ${tip}` : ""}`);
+  }
+  function error(msg, tip = "") {
+    console.error(`\u{1F6A8} [SimpliJS Error]: ${msg}${tip ? `
+\u{1F4A1} Tip: ${tip}` : ""}`);
+  }
+  function fadeIn(el, duration = 300) {
+    const element = typeof el === "string" ? document.querySelector(el) : el;
+    if (!element) return;
+    element.style.opacity = "0";
+    element.style.transition = `opacity ${duration}ms ease-in`;
+    element.style.display = "";
+    requestAnimationFrame(() => element.style.opacity = "1");
+  }
+  function fadeOut(el, duration = 300) {
+    const element = typeof el === "string" ? document.querySelector(el) : el;
+    if (!element) return;
+    element.style.transition = `opacity ${duration}ms ease-out`;
+    element.style.opacity = "0";
+    setTimeout(() => element.style.display = "none", duration);
   }
 
   // src/core.js
@@ -147,22 +320,69 @@ var SimpliJS = (() => {
         }
         if (viewFn) {
           effect(() => {
-            render(root, viewFn());
+            domPatch(root, viewFn());
           });
         }
+      },
+      form(options) {
+        return async (e) => {
+          e.preventDefault();
+          const data = {};
+          const formData = new FormData(e.target);
+          let hasErrors = false;
+          options.fields.forEach((field) => {
+            data[field] = formData.get(field);
+            if (options.validate && options.validate[field]) {
+              const error2 = options.validate[field](data[field], data);
+              if (error2) {
+                warn(`Validation failed for '${field}'`, error2);
+                hasErrors = true;
+              }
+            }
+          });
+          if (!hasErrors && options.submit) {
+            await options.submit(data);
+          }
+        };
       }
     };
   }
-
-  // src/utils.js
-  function warn(msg) {
-    console.warn(`[SimpliJS warn]: ${msg}`);
-  }
-  function error(msg) {
-    console.error(`[SimpliJS error]: ${msg}`);
+  function hydrate(rootElement = document) {
+    const elements = rootElement.querySelectorAll("[simpli-island]");
+    elements.forEach((el) => {
+      const componentName = el.getAttribute("simpli-island");
+      if (!componentName) return;
+      if (!el.hasAttribute("data-hydrated")) {
+        const loadStrategy = el.hasAttribute("data-client:idle") ? "idle" : el.hasAttribute("data-client:visible") ? "visible" : "load";
+        const doHydrate = () => {
+          const customElement = document.createElement(componentName);
+          while (el.firstChild) customElement.appendChild(el.firstChild);
+          el.replaceWith(customElement);
+          customElement.setAttribute("data-hydrated", "true");
+        };
+        if (loadStrategy === "idle" && "requestIdleCallback" in window) {
+          requestIdleCallback(doHydrate);
+        } else if (loadStrategy === "visible" && "IntersectionObserver" in window) {
+          const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+              doHydrate();
+              observer.disconnect();
+            }
+          });
+          observer.observe(el);
+        } else {
+          doHydrate();
+        }
+      }
+    });
   }
 
   // src/index.js
   var VERSION = "0.1.0";
+  if (typeof window !== "undefined" && window.htmx) {
+    window.htmx.on("htmx:afterSwap", (event) => {
+      hydrate(event.detail.target);
+    });
+  }
   return __toCommonJS(index_exports);
 })();

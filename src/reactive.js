@@ -3,8 +3,17 @@ let activeEffect = null;
 export function effect(fn) {
   const effectFn = () => {
     activeEffect = effectFn;
-    fn();
-    activeEffect = null;
+    try {
+      fn();
+    } catch (err) {
+      if (err instanceof TypeError && (err.message.includes('undefined') || err.message.includes('null'))) {
+        console.error(`🔍 [SimpliJS Error]: ${err.message}\n💡 Tip: You might be accessing a property on an undefined reactive state. Did you forget to initialize it?`);
+      } else {
+        console.error(err);
+      }
+    } finally {
+      activeEffect = null;
+    }
   };
   effectFn();
 }
@@ -37,3 +46,26 @@ export function reactive(obj) {
     }
   });
 }
+
+reactive.async = function(fn) {
+  const state = reactive({
+    loading: true,
+    error: null,
+    value: null
+  });
+
+  Promise.resolve(fn())
+    .then(value => {
+      state.value = value;
+      state.error = null;
+    })
+    .catch(error => {
+      state.error = error;
+      state.value = null;
+    })
+    .finally(() => {
+      state.loading = false;
+    });
+
+  return state;
+};
