@@ -1,4 +1,4 @@
-export function domPatch(container, html) {
+export function domPatch(container, html, hostComponent = null) {
   if (typeof container === 'string') {
     container = document.querySelector(container);
   }
@@ -7,21 +7,58 @@ export function domPatch(container, html) {
     return;
   }
 
-  // First render: just set it
-  if (!container.hasChildNodes()) {
-    container.innerHTML = html;
-    return;
-  }
-
-  // Simple patching: parse new HTML and sync it
   const template = document.createElement('template');
   template.innerHTML = html;
-  const newNodes = Array.from(template.content.childNodes);
+
+  function processNode(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) return node;
+
+    if (node.tagName === 'SLOT' && hostComponent && hostComponent._originalNodes) {
+      const slotName = node.getAttribute('name');
+      node.innerHTML = '';
+      hostComponent._originalNodes.forEach(n => {
+        if (n.nodeType === Node.ELEMENT_NODE) {
+           if ((slotName && n.getAttribute('slot') === slotName) || (!slotName && !n.hasAttribute('slot'))) {
+             node.appendChild(n.cloneNode(true));
+           }
+        } else if (!slotName) {
+           node.appendChild(n.cloneNode(true));
+        }
+      });
+    }
+
+    if (hostComponent) {
+      Array.from(node.attributes || []).forEach(attr => {
+        if (attr.name === 'ref') {
+          if (hostComponent._lifecycle && hostComponent._lifecycle[attr.value]) {
+            hostComponent._lifecycle[attr.value].value = node;
+          } else {
+            hostComponent[attr.value] = { value: node };
+          }
+        } else if (attr.name.startsWith('@') || attr.name.startsWith('on:')) {
+          const eventType = attr.name.replace(/^(@|on:)/, '');
+          const handlerName = attr.value;
+          node.removeAttribute(attr.name);
+          node._simpliEvents = node._simpliEvents || {};
+          if (!node._simpliEvents[eventType] && hostComponent[handlerName]) {
+             const handler = hostComponent[handlerName].bind(hostComponent);
+             node.addEventListener(eventType, handler);
+             node._simpliEvents[eventType] = handler;
+          }
+        }
+      });
+    }
+
+    Array.from(node.childNodes).forEach(processNode);
+    return node;
+  }
+
+  const newNodes = Array.from(template.content.childNodes).map(n => processNode(n.cloneNode(true)));
   const oldNodes = Array.from(container.childNodes);
 
   function patch(oldNode, newNode) {
     if (oldNode.nodeType !== newNode.nodeType || oldNode.nodeName !== newNode.nodeName) {
-      oldNode.replaceWith(newNode.cloneNode(true));
+      oldNode.replaceWith(newNode);
       return;
     }
 
@@ -50,9 +87,27 @@ export function domPatch(container, html) {
         const val = newAttrs[i].value;
         if (oldNode.getAttribute(name) !== val) {
             oldNode.setAttribute(name, val);
+            if (oldNode._props && name !== 'class' && name !== 'style') {
+              let castVal = val;
+              if (castVal === '') castVal = true;
+              else if (castVal === 'false') castVal = false;
+              else if (!isNaN(castVal)) castVal = Number(castVal);
+              oldNode._props[name] = castVal;
+            }
         }
     }
     
+    // Sync events from processed new node
+    if (newNode._simpliEvents) {
+      oldNode._simpliEvents = oldNode._simpliEvents || {};
+      Object.keys(newNode._simpliEvents).forEach(type => {
+        if (!oldNode._simpliEvents[type]) {
+           oldNode.addEventListener(type, newNode._simpliEvents[type]);
+           oldNode._simpliEvents[type] = newNode._simpliEvents[type];
+        }
+      });
+    }
+
     // Sync special properties
     if (oldNode.tagName === 'INPUT' || oldNode.tagName === 'TEXTAREA') {
         if (oldNode.value !== newNode.value) oldNode.value = newNode.value;
@@ -65,7 +120,7 @@ export function domPatch(container, html) {
     
     for (let i = 0; i < max; i++) {
       if (!oldChildren[i]) {
-        oldNode.appendChild(newChildren[i].cloneNode(true));
+        oldNode.appendChild(newChildren[i]);
       } else if (!newChildren[i]) {
         oldNode.removeChild(oldChildren[i]);
       } else {
@@ -77,7 +132,7 @@ export function domPatch(container, html) {
   const max = Math.max(oldNodes.length, newNodes.length);
   for (let i = 0; i < max; i++) {
     if (!oldNodes[i]) {
-      container.appendChild(newNodes[i].cloneNode(true));
+      container.appendChild(newNodes[i]);
     } else if (!newNodes[i]) {
       container.removeChild(oldNodes[i]);
     } else {

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS Features Test</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; background: #f9f9f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .is-invalid { border: 2px solid red !important; }
+        h2 { margin-top: 0; font-size: 1.2rem; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- 1. Props -->
+        <user-card name="Alice" role="Admin"></user-card>
+        <user-card name="Bob" role="User"></user-card>
+
+        <!-- 2. Events & 5. Refs -->
+        <counter-box></counter-box>
+
+        <!-- 6. Event Bus & 10. Form -->
+        <login-form></login-form>
+
+        <!-- 7. Slots -->
+        <modal-dialog>
+            <h3 slot="header">My Modal Header</h3>
+            <p>This is projected content.</p>
+        </modal-dialog>
+
+        <!-- 11. Bridge -->
+        <bridge-demo></bridge-demo>
+
+        <!-- 12. Vault Controls -->
+        <div class="card">
+            <h2>Time Vault (Global State)</h2>
+            <p>Global User: <span id="vault-user">None</span></p>
+            <button onclick="globalState.vault.back()">⏪ Back</button>
+            <button onclick="globalState.vault.forward()">⏩ Forward</button>
+            <button onclick="alert(globalState.vault.share())">🔗 Share Debug Link</button>
+        </div>
+    </div>
+
+    <!-- Define the app module -->
+    <script type="module">
+        import { createApp, component, reactive, computed, watch, ref, emit, on, use } from '../src/index.js';
+
+        // THE TIME VAULT (12)
+        window.globalState = reactive.vault({
+            user: null,
+            count: 0
+        });
+
+        // 8. Watch / Effect
+        watch(() => globalState.user, (newVal) => {
+            document.getElementById('vault-user').textContent = newVal || 'None';
+        });
+
+        watch(() => globalState.count, (newVal) => {
+            console.log('Global count changed to:', newVal);
+        });
+
+        // 1. Props & attributes
+        component('user-card', (el, props) => {
+            return {
+                render: () => `<div class="card">
+                    <h2>User Card</h2>
+                    <p>Name: ${props.name}</p>
+                    <p>Role: ${props.role}</p>
+                </div>`
+            }
+        });
+
+        // 2. Computed, 4. Events, 5. Refs
+        component('counter-box', () => {
+            const doubled = computed(() => globalState.count * 2);
+            const myInput = ref();
+
+            return {
+                onMount: () => {
+                    console.log('Counter mounted. Input ref:', myInput.value);
+                },
+                increment: () => {
+                    globalState.count++; 
+                    if (myInput.value) myInput.value.focus();
+                },
+                render: () => `<div class="card">
+                    <h2>Counter & Computed</h2>
+                    <p>Count: ${globalState.count} | Doubled: ${doubled.value}</p>
+                    <button @click="increment">Increment + Focus</button>
+                    <input ref="myInput" placeholder="Auto-focused on click" />
+                </div>`
+            }
+        });
+
+        // 6. Event Bus & 10. Form Validation UI
+        component('login-form', (el) => {
+            const state = reactive({ loggedIn: false });
+
+            // Event Bus
+            on('user_login', (username) => {
+                state.loggedIn = true;
+                globalState.user = username; // Modifies Vault
+            });
+
+            const submitForm = createApp().form({
+                fields: ['username', 'email'],
+                validate: {
+                    username: (val) => val.length < 3 ? 'Too short' : null,
+                    email: (val) => !val.includes('@') ? 'Invalid email' : null
+                },
+                onError: (errors) => {
+                    emit('form_error', errors);
+                },
+                submit: (data) => {
+                    emit('user_login', data.username);
+                }
+            });
+
+            return {
+                submitForm,
+                render: () => `<div class="card">
+                    <h2>Form Validation & Event Bus</h2>
+                    ${state.loggedIn 
+                        ? `<p style="color:green">Logged in successfully!</p>` 
+                        : `<form @submit="submitForm">
+                             <input name="username" placeholder="Username" />
+                             <input name="email" placeholder="Email (@)" />
+                             <button type="submit">Login</button>
+                           </form>`
+                    }
+                </div>`
+            }
+        });
+
+        // 7. Slots
+        component('modal-dialog', () => {
+            return {
+                render: () => `<div class="card" style="border: 2px dashed #666;">
+                    <h2>Content Projection (Slots)</h2>
+                    <div style="background: #eee; padding: 10px;">
+                        <slot name="header"></slot>
+                    </div>
+                    <div style="padding: 10px;">
+                        <slot></slot>
+                    </div>
+                </div>`
+            }
+        });
+
+        // 9. Better Error Handling
+        component('error-prone', () => {
+            return {
+                onError: (err) => {
+                    console.warn("Caught error natively:", err.message);
+                },
+                render: () => {
+                    throw new Error("Demonstrating Better Error Handling");
+                    return `<div>Crash</div>`;
+                }
+            }
+        });
+
+        // 11. THE BRIDGE
+        const ReactBtn = use.react('https://cdn.jsdelivr.net/npm/lucide-react@0.292.0/+esm', 'react-icon');
+
+        component('bridge-demo', () => {
+            return {
+                render: () => `<div class="card">
+                    <h2>The Bridge (React Import)</h2>
+                    <p>If you see a Check Circle icon, React was successfully loaded inside SimpliJS via The Bridge.</p>
+                    <react-icon color="green" size="24"></react-icon>
+                </div>`
+            }
+        });
+
+        // Initialize Error Component
+        const errEl = document.createElement('error-prone');
+        document.body.appendChild(errEl);
+
+    </script>
+</body>
+</html>
