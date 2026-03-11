@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS Playground</title>
+    <script src="../dist/simplijs.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fafafa; padding: 2rem; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #0066cc; margin-top: 0; }
+        button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #0052a3; }
+        .box { margin-top: 1rem; padding: 1rem; border: 1px dashed #ccc; border-radius: 4px; background: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SimpliJS Playground</h1>
+        <p>Edit the code below or experiment with the live instance!</p>
+        <div id="app" class="box"></div>
+    </div>
+
+    <script>
+        const { createApp, reactive, component } = SimpliJS;
+
+        // 1. Reactive State
+        const state = reactive({
+            count: 0,
+            text: 'Welcome to SimpliJS!'
+        });
+
+        // 2. Global Event Handler
+        window.increment = () => state.count++;
+
+        // 3. Application instance
+        const app = createApp('#app');
+
+        // 4. Define the View
+        app.view(() => `
+            <div>
+                <h2>${state.text}</h2>
+                <p>You clicked the button <strong>${state.count}</strong> times.</p>
+                <button onclick="increment()">Click me</button>
+            </div>
+        `);
+
+        // 5. Mount it!
+        app.mount();
+    </script>
+</body>
+</html>
