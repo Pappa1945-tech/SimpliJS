@@ -1,3 +1,15 @@
+/**
+ * SimpliJS - The Python of JavaScript Frameworks
+ * Copyright (c) 2026 Subhamoy Bhattacharjee
+ * Website: https://www.sbtech.co.in
+ * 
+ * Licensed under Apache License 2.0
+ * See LICENSE file for full terms
+ * 
+ * @author Subhamoy Bhattacharjee
+ * @website https://www.sbtech.co.in
+ * @repository https://github.com/Pappa1945-tech/SimpliJS
+ */
 import { reactive, effect } from './reactive.js';
 
 let bridgeId = 0;
