@@ -16,7 +16,7 @@
     "components"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "esbuild": "^0.25.12"
   }
