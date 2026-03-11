@@ -1,3 +1,7 @@
+/**
+ * SimpliJS - Created by Subhamoy Bhattacharjee
+ * Copyright 2026 - All rights under Apache License 2.0
+ */
 import { domPatch } from './renderer.js';
 import { effect } from './reactive.js';
 import { warn } from './utils.js';
