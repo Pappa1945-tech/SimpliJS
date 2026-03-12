@@ -33,7 +33,7 @@ When choosing a frontend framework, the cognitive load and setup time matter. Si
 **Using ES Modules (Recommended via CDN)**
 ```html
 <script type="module">
-  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v1.0.0/dist/simplijs.min.js';
+  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v1.0.0-alpha/dist/simplijs.min.js';
   
   // Start coding immediately!
 </script>
