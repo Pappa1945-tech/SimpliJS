@@ -41,6 +41,24 @@ When choosing a frontend framework, the cognitive load and setup time matter. Si
 
 ---
 
+## 🌍 Real-World Usage
+
+SimpliJS is not just a concept — it is already powering a real production website.
+
+The official website of SimpliJS is built **entirely using SimpliJS itself**, without using any other JavaScript framework.
+
+🔗 https://www.sbtech.co.in
+
+This demonstrates that SimpliJS is capable of building complete modern websites with:
+
+- Zero build tools
+- No external frameworks
+- Pure HTML + JavaScript
+
+The site includes multiple dynamic pages and serves as a real-world example of SimpliJS in action.
+
+---
+
 ## 🛠️ The Feature Guide & "How To"
 
 SimpliJS ships with 12 incredibly powerful native features out of the box. Here is exactly how to use each and every one of them to build your app.
