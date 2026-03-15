@@ -46,17 +46,25 @@ export function createApp(rootSelector) {
       return this;
     },
     mount() {
+      if (typeof window === 'undefined') return this;
+      
       const root = document.querySelector(rootSelector);
       if (!root) {
         console.error(`[SimpliJS error]: Root element ${rootSelector} not found.`);
-        return;
+        return this;
       }
       
+      // If the root already has content (SSR), we should hydrate instead of just patching
+      if (root.children.length > 0 && !root.hasAttribute('data-hydrated')) {
+        hydrate(root);
+      }
+
       if (viewFn) {
         effect(() => {
           domPatch(root, viewFn());
         });
       }
+      return this;
     },
     form(options) {
       return async (e) => {
@@ -97,22 +105,28 @@ export function createApp(rootSelector) {
 }
 
 export function hydrate(rootElement = document) {
+  if (typeof window === 'undefined') return;
+  
   const elements = rootElement.querySelectorAll('[simpli-island]');
   elements.forEach(el => {
     const componentName = el.getAttribute('simpli-island');
     if (!componentName) return;
     
-    // Note: To fully support this, components need to be globally accessible
-    // or registered. SimpliJS uses Custom Elements, which handle their own
-    // hydration when connected to the DOM, but for explicitly manual hydration 
-    // we could dynamically create the custom element tag:
     if (!el.hasAttribute('data-hydrated')) {
       const loadStrategy = 
         el.hasAttribute('data-client:idle') ? 'idle' :
         el.hasAttribute('data-client:visible') ? 'visible' : 'load';
         
       const doHydrate = () => {
+        // Find existing state if any
+        const stateId = el.getAttribute('data-state-id');
+        const initialState = (window.__SIMPLI_STATE__ && stateId) ? window.__SIMPLI_STATE__[stateId] : null;
+
         const customElement = document.createElement(componentName);
+        if (initialState) {
+          customElement._initialState = initialState;
+        }
+
         // Move children if needed
         while (el.firstChild) customElement.appendChild(el.firstChild);
         el.replaceWith(customElement);

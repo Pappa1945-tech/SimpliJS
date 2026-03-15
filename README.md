@@ -73,7 +73,7 @@ SimpliJS introduces a revolutionary **HTML-First** mode that allows you to build
 **Using ES Modules (Recommended via CDN)**
 ```html
 <script type="module">
-  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v1.0.0/dist/simplijs.min.js';
+  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v1.0.0-alpha/dist/simplijs.min.js';
   
   // Start coding immediately!
 </script>
@@ -492,6 +492,86 @@ SimpliJS HTML-First empowers you to build fully reactive, interactive, and data-
     - **How to use:** `<div s-once>{time}</div>`
 54. **`s-ignore`**: Tells the engine to skip a subtree (perfect for 3rd party libs).
     - **How to use:** `<div s-ignore>...</div>`
+
+---
+
+## 🌐 **Industry-Level SSR & SEO (Static Site Generation)**
+
+SimpliJS is built for the modern web where **SEO, Performance, and Security** are non-negotiable. Our built-in **SSG (Static Site Generation)** engine allows you to pre-render your entire application into highly optimized, search-engine-friendly static HTML with **Secure SSR and Auto-Hydration**.
+
+**Perfect for GitHub Pages, Netlify, and Vercel—No Server Required.**
+
+### 1. High-Level SEO Helpers
+Manage your document metadata with ease. SimpliJS handles everything from basic titles to complex OpenGraph and Twitter cards.
+
+```javascript
+import { setSEO, setJsonLd, setThemeColor, setBreadcrumbs } from 'simplijs';
+
+// 🚀 Set all essential SEO tags in one call
+setSEO({
+  title: 'SimpliJS | The Frictionless Framework',
+  description: 'Built for the Anti-Build Movement.',
+  image: 'https://simplijs.org/og-image.png',
+  url: 'https://simplijs.org',
+  twitterHandle: '@simplijs'
+});
+
+// 📱 Mobile & Branding
+setThemeColor('#6a0dad');
+
+// 🍞 Automated Breadcrumb Schema (JSON-LD)
+setBreadcrumbs([
+  { name: 'Home', url: '/' },
+  { name: 'Docs', url: '/docs' }
+]);
+
+// 🤖 Structured Data (JSON-LD)
+setJsonLd({
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SimpliJS"
+});
+```
+
+### 2. Pro-Grade SSG Engine (`ssg.js`)
+The SimpliJS SSG tool isn't just a renderer; it's a full pre-deployment optimization suite.
+
+- **🗺️ Sitemap Generation**: Automatically creates a perfect `sitemap.xml` for Google.
+- **🤖 Robots.txt**: Generates a standard `robots.txt` pointing to your sitemap.
+- **🔗 Canonical URLs**: Automatically injects `<link rel="canonical">` to prevent duplicate content issues.
+- **⚡ Asset Preloading**: Injects `modulepreload` and `preload` tags for lightning-fast LCP.
+- **📻 RSS Feed**: Built-in support for generating `rss.xml` for your blogs or news updates.
+- 🚀 HTML Minification: Strips whitespace and comments to deliver the smallest possible byte size.
+- 🛡️ **XSS-Safe Rendering**: Built-in HTML escaping for all server-side templates.
+- 💧 **Smart Hydration**: Automatically resumes state from SSR and attaches event listeners without full re-renders.
+- 🔍 Link Validation: Automatically scans for broken internal links during the build.
+
+### 3. Usage Example
+Define your routes and metadata in a simple config file:
+
+**`ssg.config.js`**
+```javascript
+export default {
+  baseUrl: 'https://your-site.com',
+  outDir: 'dist',
+  minify: true,
+  preload: ['/src/index.js', '/styles/main.css'],
+  rss: {
+    title: 'My News',
+    description: 'Latest SimpliJS Updates',
+    items: [{ title: 'v1.0 Released!', url: '/news/v1', description: '...' }]
+  },
+  routes: {
+    '/': HomeTemplate,
+    '/about': AboutTemplate
+  }
+};
+```
+
+**Build Command:**
+```bash
+node ssg.js ssg.config.js
+```
 
 ---
 

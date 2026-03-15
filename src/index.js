@@ -1,4 +1,4 @@
-export const VERSION = '1.0.0';
+export const VERSION = 'v1.0.0-alpha';
 
 export { reactive, effect, computed, watch, ref } from './reactive.js';
 export { domPatch as render, domPatch } from './renderer.js';
@@ -6,6 +6,8 @@ export { component } from './component.js';
 export { createRouter } from './router.js';
 export { createApp, hydrate, emit, on, bus } from './core.js';
 export { warn, error, fadeIn, fadeOut } from './utils.js';
+export { useHead, setSEO, setJsonLd, setThemeColor, setSocialIcons, setBreadcrumbs } from './seo.js';
+export { renderToString, renderToStaticMarkup } from './ssr.js';
 export { use } from './bridge.js';
 export { directives } from './directives.js';
 

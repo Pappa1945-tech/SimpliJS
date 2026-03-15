@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SimpliJS | HTML-First Verification (Features 14-54)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; }
+        section { margin-bottom: 40px; padding: 25px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+        h1 { color: #818cf8; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        h2 { color: #c084fc; margin-top: 0; }
+        .test-box { padding: 15px; background: #0f172a; border-radius: 8px; border: 1px solid #475569; margin-top: 10px; }
+        .status { margin-top: 10px; font-weight: bold; padding: 5px 10px; border-radius: 4px; display: inline-block; }
+        .pass { background: #065f46; color: #34d399; }
+        .fail { background: #7f1d1d; color: #f87171; }
+        .is-invalid { border: 2px solid #f87171 !important; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 5px 0; border-bottom: 1px solid #334155; }
+    </style>
+</head>
+<body s-app s-state="{ 
+    gCount: 0, 
+    text: 'Initial', 
+    html: '<b>Bold</b>', 
+    val: 'Value1', 
+    attr: 'btn-id', 
+    isActive: true, 
+    showMe: true, 
+    hideMe: false, 
+    items: ['A', 'B', 'C'],
+    email: '',
+    apiUrl: '',
+    lazyImg: 'https://picsum.photos/200/100',
+    memoVal: 1,
+    onceVal: 'Rendered Once'
+}">
+
+    <h1>SimpliJS HTML-First Verification</h1>
+
+    <!-- 14-16 Core & Global -->
+    <section id="sec-core" s-global="{ theme: 'dark' }">
+        <h2>14-16: Core & Global</h2>
+        <div class="test-box">
+            <p>s-app / s-state OK if this text is visible.</p>
+            <p>Global Theme: <span s-text="theme"></span></p>
+        </div>
+    </section>
+
+    <!-- 17-24 Data Binding -->
+    <section id="sec-data">
+        <h2>17-24: Data Binding</h2>
+        <div class="test-box">
+            <input s-bind="text" id="bind-input">
+            <p>18: s-text: <span s-text="text" id="text-out"></span></p>
+            <p>19: Interpolation: <span id="interp-out">{text}</span></p>
+            <div s-html="html" id="html-out"></div>
+            <input s-value="val" id="val-input">
+            <button s-attr:id="attr" class="dynamic-btn">Btn with dynamic ID</button>
+            <div s-class="{ pass: isActive }" id="class-out">Active Class</div>
+            <div s-style="{ color: isActive ? '#4ade80' : '#f87171' }" id="style-out">Styled Text</div>
+        </div>
+    </section>
+
+    <!-- 25-31 Logic & Control -->
+    <section id="sec-logic">
+        <h2>25-31: Logic & Control</h2>
+        <div class="test-box">
+            <div s-if="isActive" id="if-out">Visible if active</div>
+            <div s-if="!isActive">Hidden</div>
+            <div s-else id="else-out">Visible if NOT active</div>
+            
+            <div s-show="showMe" id="show-out">Shown via display</div>
+            <div s-hide="hideMe" id="hide-out">Not hidden yet</div>
+
+            <ul id="for-out">
+                <li s-for="item, i in items" s-key="item">
+                    {i}: {item} 
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 32-37 Events -->
+    <section id="sec-events">
+        <h2>32-37: Events</h2>
+        <div class="test-box">
+            <button s-click="gCount++" id="click-btn">Click: {gCount}</button>
+            <div s-hover="text = 'Hovered'" id="hover-box" style="padding: 10px; border: 1px dashed gray;">Hover Me</div>
+            <input s-key:enter="text = 'Enter!'" id="key-input" placeholder="Press Enter">
+        </div>
+    </section>
+
+    <!-- 38-40 Forms & Validation -->
+    <section id="sec-forms">
+        <h2>38-40: Forms</h2>
+        <div class="test-box">
+            <form s-submit="text = 'Form Submitted'">
+                <input s-bind="email" s-validate="required" id="email-input">
+                <span s-error="email" id="email-error" style="color: red;"></span>
+                <button type="submit" id="submit-btn">Submit</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 41-43 Async -->
+    <section id="sec-async">
+        <h2>41-43: Async Fetch</h2>
+        <div class="test-box">
+            <button s-click="apiUrl = 'https://jsonplaceholder.typicode.com/posts/1'" id="fetch-btn">Fetch Data</button>
+            <div s-fetch="apiUrl">
+                <div s-loading id="async-loading">Loading...</div>
+                <div s-error id="async-error">Error!</div>
+                <div s-if="data" id="async-out">ID: {data.id}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 44-46 Components & Slots -->
+    <section id="sec-components">
+        <h2>44-46: Components</h2>
+        <div class="test-box">
+            <div s-component="'test-comp'" s-prop:msg="text" id="comp-out"></div>
+        </div>
+    </section>
+
+    <!-- 47-49 Routing -->
+    <section id="sec-routing">
+        <h2>47-49: Routing</h2>
+        <div class="test-box">
+            <a s-link="/test" id="link-test">Go Home</a>
+            <div s-route="/test" id="route-test">Route Content</div>
+            <main s-view id="view-out"></main>
+        </div>
+    </section>
+
+    <!-- 50-54 Performance -->
+    <section id="sec-perf">
+        <h2>50-54: Performance</h2>
+        <div class="test-box">
+            <img s-lazy="lazyImg" id="lazy-img">
+            <div s-memo="memoVal" id="memo-out">Memo: {text}</div>
+            <input s-ref="myInput" id="ref-input" value="Ref Content">
+            <div s-once id="once-out">Once: {onceVal}</div>
+            <div s-ignore id="ignore-out">Ignored: {text}</div>
+        </div>
+    </section>
+
+    <script src="../dist/simplijs.js"></script>
+    <script>
+        // Register a component for s-component test
+        if (window.SimpliJS && window.SimpliJS.component) {
+            window.SimpliJS.component('test-comp', (el, props) => ({
+                render: () => `<div class="inner">Comp Msg: ${props.msg}</div>`
+            }));
+        }
+    </script>
+</body>
+</html>

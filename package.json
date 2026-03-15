@@ -1,12 +1,13 @@
 {
   "name": "simplijs",
-  "version": "1.0.0",
+  "version": "v1.0.0-alpha",
   "description": "A tiny modern JavaScript framework",
   "main": "dist/simplijs.js",
   "type": "module",
   "types": "simplijs.d.ts",
   "scripts": {
     "build": "node build.js",
+    "build:ssg": "node ssg.js examples/seo-blog/ssg.config.js",
     "test": "node tests/run.js"
   },
   "keywords": [

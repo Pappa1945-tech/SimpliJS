@@ -35,10 +35,14 @@ global.document = {
       getAttribute: () => null,
       setAttribute: () => {},
       removeAttribute: () => {},
-      appendChild: function(n) { this.childNodes.push(n); },
+      appendChild: function(n) { n.parentNode = this; this.childNodes.push(n); },
       removeChild: function(n) { this.childNodes = this.childNodes.filter(c => c !== n); },
-      replaceWith: () => {},
-      cloneNode: function() { return { ...this }; }
+      replaceWith: function(n) { if (this.parentNode) { const idx = this.parentNode.childNodes.indexOf(this); this.parentNode.childNodes[idx] = n; n.parentNode = this.parentNode; } },
+      cloneNode: function() { return { ...this, attributes: [...this.attributes], childNodes: [...this.childNodes] }; },
+      closest: function(selector) {
+        if (selector === '[data-hydrating]' && this.hasAttribute('data-hydrating')) return this;
+        return null;
+      }
     };
     if (tag.toLowerCase() === 'template') {
       el.content = { childNodes: [] };

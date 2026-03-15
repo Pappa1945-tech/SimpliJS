@@ -56,8 +56,15 @@ export function domPatch(container, html, hostComponent = null) {
   const newNodes = Array.from(template.content.childNodes).map(n => processNode(n.cloneNode(true)));
   const oldNodes = Array.from(container.childNodes);
 
+  // Hydration optimization: if container has data-hydrated, we should be careful
+  const isHydrating = container.hasAttribute('data-hydrating') || container.closest('[data-hydrating]');
+
   function patch(oldNode, newNode) {
     if (oldNode.nodeType !== newNode.nodeType || oldNode.nodeName !== newNode.nodeName) {
+      if (isHydrating) {
+        // If hydrating and they mismatch, we should probably warn or force replace
+        console.warn(`[SimpliJS Hydration]: Mismatch at ${oldNode.nodeName}. Forcing update.`);
+      }
       oldNode.replaceWith(newNode);
       return;
     }
@@ -73,15 +80,17 @@ export function domPatch(container, html, hostComponent = null) {
     const oldAttrs = oldNode.attributes;
     const newAttrs = newNode.attributes;
     
-    // Remove deleted attributes
-    for (let i = oldAttrs.length - 1; i >= 0; i--) {
-      const name = oldAttrs[i].name;
-      if (!newNode.hasAttribute(name)) {
-        oldNode.removeAttribute(name);
+    // Remove deleted attributes (skip if hydrating to preserve server-only attrs if any?)
+    if (!isHydrating) {
+      for (let i = oldAttrs.length - 1; i >= 0; i--) {
+        const name = oldAttrs[i].name;
+        if (!newNode.hasAttribute(name)) {
+          oldNode.removeAttribute(name);
+        }
       }
     }
     
-    // Update or add attributes (Don't overwrite input values if active)
+    // Update or add attributes
     for (let i = 0; i < newAttrs.length; i++) {
         const name = newAttrs[i].name;
         const val = newAttrs[i].value;
@@ -97,10 +106,11 @@ export function domPatch(container, html, hostComponent = null) {
         }
     }
     
-    // Sync events from processed new node
+    // Sync events (Crucial for Hydration)
     if (newNode._simpliEvents) {
       oldNode._simpliEvents = oldNode._simpliEvents || {};
       Object.keys(newNode._simpliEvents).forEach(type => {
+        // Even if we are hydrating, we must re-attach events because server HTML doesn't have them
         if (!oldNode._simpliEvents[type]) {
            oldNode.addEventListener(type, newNode._simpliEvents[type]);
            oldNode._simpliEvents[type] = newNode._simpliEvents[type];
@@ -139,4 +149,6 @@ export function domPatch(container, html, hostComponent = null) {
       patch(oldNodes[i], newNodes[i]);
     }
   }
+  
+  if (isHydrating) container.removeAttribute('data-hydrating');
 }

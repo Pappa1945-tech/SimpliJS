@@ -47,9 +47,9 @@ declare module 'simplijs' {
     submit: (data: TData) => Promise<void> | void;
   }
 
-  export interface App {
+    export interface App {
     view(fn: () => string): this;
-    mount(): void;
+    mount(): this;
     form<TData = Record<string, any>>(options: FormOptions<TData>): (e: Event) => void;
   }
 
@@ -66,11 +66,36 @@ declare module 'simplijs' {
     [path: string]: RouteHandler;
   }
   
+  export interface RouterOptions {
+    root?: string | HTMLElement;
+    mode?: 'hash' | 'history';
+  }
+
   export interface Router {
-    navigate(hash: string): void;
+    navigate(path: string): void;
     transition(type: 'slide' | 'fade' | string): void;
   }
-  export function createRouter(routes: Routes, rootElement?: string): Router;
+  export function createRouter(routes: Routes, options?: RouterOptions): Router;
+
+  // SEO
+  export interface MetaTag {
+    name?: string;
+    property?: string;
+    content: string;
+  }
+  export interface HeadConfig {
+    title?: string;
+    meta?: MetaTag[];
+    links?: Record<string, string>[];
+  }
+  export function useHead(config: HeadConfig | (() => HeadConfig)): void;
+
+  // SSR / SSG
+  export interface SSRRenderOptions {
+    data?: Record<string, any>;
+  }
+  export function renderToString(template: string | (() => string), options?: SSRRenderOptions): string;
+  export function renderToStaticMarkup(content: string, headHtml?: string, template?: string): string;
 
   // Bridge (Feature 12)
   export interface Bridge {
