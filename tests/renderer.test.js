@@ -1,30 +1,15 @@
+// tests/renderer.test.js
 import { domPatch } from '../src/renderer.js';
 import assert from 'assert';
 
 console.log('Testing Renderer...');
 
-// Mock the DOM
-global.Node = { TEXT_NODE: 3 };
+const container = document.createElement('div');
+container.id = 'app';
 
-global.mockAppDiv = {
-  innerHTML: '',
-  childNodes: [],
-  hasChildNodes: () => false,
-  appendChild: function(node) { this.childNodes.push(node); this.innerHTML = node.outerHTML || node.textContent; }
-};
+domPatch(container, '<h1>Hello World</h1>');
 
-global.document = {
-  querySelector: (sel) => {
-    if (sel === '#app') return global.mockAppDiv;
-    return null;
-  },
-  createElement: () => ({
-    content: { childNodes: [{ outerHTML: '<h1>Hello</h1>', cloneNode: function() { return this; } }] },
-    set innerHTML(val) { }
-  })
-};
+assert.strictEqual(container.childNodes.length, 1, 'Should have one child');
+assert.strictEqual(container.childNodes[0].tagName, 'H1', 'Child should be H1');
 
-domPatch('#app', '<h1>Hello</h1>');
-assert.strictEqual(global.mockAppDiv.innerHTML, '<h1>Hello</h1>', 'Renderer should update innerHTML');
-
-console.log('Renderer tests passed! ✅');
+console.log('  - Renderer: OK');

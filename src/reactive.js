@@ -30,12 +30,15 @@ export function effect(fn) {
   effectFn();
 }
 
+const proxyCache = new WeakMap();
+
 export function reactive(obj, onSet = null) {
   if (typeof obj !== 'object' || obj === null) return obj;
+  if (proxyCache.has(obj)) return proxyCache.get(obj);
   
   const depsMap = new Map();
 
-  return new Proxy(obj, {
+  const proxy = new Proxy(obj, {
     get(target, key, receiver) {
       if (activeEffect) {
         let deps = depsMap.get(key);
@@ -58,6 +61,9 @@ export function reactive(obj, onSet = null) {
       return result;
     }
   });
+
+  proxyCache.set(obj, proxy);
+  return proxy;
 }
 
 export function ref(value = null) {
@@ -109,7 +115,7 @@ reactive.async = function(fn) {
   return state;
 };
 
-reactive.vault = function(obj) {
+reactive.vault = function(obj, limit = 50) {
   let isTravelling = false;
   let history = [JSON.parse(JSON.stringify(obj))];
   let currentIndex = 0;
@@ -124,9 +130,9 @@ reactive.vault = function(obj) {
       const snapshot = JSON.parse(JSON.stringify(obj));
       const last = history[currentIndex];
       if (JSON.stringify(last) !== JSON.stringify(snapshot)) {
-        history = history.slice(0, currentIndex + 1);
+        history = history.slice(Math.max(0, currentIndex + 1 - limit), currentIndex + 1);
         history.push(snapshot);
-        currentIndex++;
+        currentIndex = history.length - 1;
       }
     });
   });
@@ -165,7 +171,9 @@ reactive.vault = function(obj) {
       }
     },
     share() {
-      const dbg = btoa(JSON.stringify(history));
+      // Only share current state and last 10 snapshots to stay within URL limits
+      const shareData = history.slice(Math.max(0, currentIndex - 10), currentIndex + 1);
+      const dbg = btoa(JSON.stringify(shareData));
       const url = new URL(window.location);
       url.searchParams.set('simpli-debug', dbg);
       return url.toString();
@@ -180,7 +188,7 @@ reactive.vault = function(obj) {
          history = JSON.parse(atob(dbg));
          currentIndex = history.length - 1;
          Object.assign(state, JSON.parse(JSON.stringify(history[currentIndex])));
-         console.log(`🕰️ [SimpliJS Vault]: Loaded ${history.length} states from shared debug link.`);
+         console.log(`🕰️ [SimpliJS Vault]: Loaded ${history.length} snapshots from shared link.`);
       } catch(e) {}
     }
   }

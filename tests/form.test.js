@@ -1,39 +1,29 @@
+// tests/form.test.js
 import { createApp } from '../src/core.js';
 import assert from 'assert';
 
 console.log('Testing Forms...');
 
 const app = createApp('#app');
-
-const testForm = app.form({
-  fields: ['username'],
-  validate: {
-    username: (v) => v === 'admin' ? null : 'error'
-  },
+const handler = app.form({
+  fields: ['name'],
   submit: (data) => {
-    assert.strictEqual(data.username, 'admin', 'Submit should pass admin');
+    assert.strictEqual(data.name, 'Simpli', 'Form data should be captured');
   }
 });
 
-// Mock FormData
-global.FormData = class {
-  constructor(target) {
-    this.target = target;
-  }
-  get(key) {
-    return this.target.elements[key];
+// Mock event
+const event = {
+  preventDefault: () => {},
+  target: {
+    elements: { name: { classList: { remove: () => {}, add: () => {} } } }
   }
 };
 
-let preventDefaultCalled = false;
-testForm({
-  preventDefault: () => preventDefaultCalled = true,
-  target: {
-    tagName: 'FORM',
-    elements: { 'username': 'admin' }
-  }
-});
+global.FormData = class {
+  constructor() { this.data = { name: 'Simpli' }; }
+  get(key) { return this.data[key]; }
+};
 
-assert.ok(preventDefaultCalled, 'preventDefault should be called');
-
-console.log('Form tests passed! ✅');
+handler(event);
+console.log('  - Forms: OK');

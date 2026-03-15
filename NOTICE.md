@@ -16,4 +16,3 @@ This project is licensed under **Apache License 2.0**.
 
 ---
 *Built with passion, to make web development wonderfully simple again.*
-EOF

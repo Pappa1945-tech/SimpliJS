@@ -1,22 +1,17 @@
+// tests/component.test.js
 import { component } from '../src/component.js';
 import assert from 'assert';
 
-console.log('Testing Component System...');
+console.log('Testing Components...');
 
-const customElements = {};
-global.customElements = {
-  define: (name, constructor) => {
-    customElements[name] = constructor;
-  },
-  get: (name) => customElements[name]
+let defined = false;
+global.customElements.define = (name) => {
+  if (name === 'my-test') defined = true;
 };
 
-global.HTMLElement = class HTMLElement {};
-
-component('my-comp', () => {
-  return 'rendered';
+component('my-test', () => {
+  return '<div>Component</div>';
 });
 
-assert.ok(customElements['my-comp'], 'Component should be registered in customElements');
-
-console.log('Component tests passed! ✅');
+assert.strictEqual(defined, true, 'Component should be defined in customElements');
+console.log('  - Components: OK');

@@ -7,7 +7,7 @@ SimpliJS is designed to be used without a build step. You can include it directl
 Include the minified version via jsDelivr:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/simplijs/dist/simplijs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v1.0.0-alpha/dist/simplijs.min.js"></script>
 ```
 
 > Note: Replace `yourusername` with the actual GitHub repository owner once published.

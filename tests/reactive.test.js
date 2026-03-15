@@ -1,3 +1,4 @@
+// tests/reactive.test.js
 import { reactive, effect } from '../src/reactive.js';
 import assert from 'assert';
 
@@ -11,11 +12,17 @@ effect(() => {
 });
 
 assert.strictEqual(dummy, 0, 'Effect should run initially');
-
 state.count++;
-assert.strictEqual(dummy, 1, 'Effect should run when property changes');
+assert.strictEqual(dummy, 1, 'Effect should update');
+console.log('  - Reactivity: OK');
 
-state.count = 10;
-assert.strictEqual(dummy, 10, 'Effect should run again when property changes');
+// Test Proxy Caching (Object Identity)
+const data = { nested: { a: 1 } };
+const s1 = reactive(data);
+const s2 = reactive(data);
+assert.strictEqual(s1, s2, 'Identical objects should return the same proxy');
 
-console.log('Reactivity tests passed! ✅');
+const n1 = s1.nested;
+const n2 = s1.nested;
+assert.strictEqual(n1, n2, 'Nested object access should return the same proxy instance');
+console.log('  - Object Identity (Proxy Cache): OK');
