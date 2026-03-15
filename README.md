@@ -35,7 +35,7 @@ When choosing a frontend framework, the cognitive load and setup time matter. Si
 | **Philosophy** | "The Python of JS" | Setup Heavy | Flexible but Split | Compiler Required | Enterprise Heavy | Signals First |
 | **Build Tools** | **Zero Config (None)** | Webpack/Vite | Vite | Rollup/Vite | Angular CLI | Vite + Babel |
 | **Learning Curve**| **Extremely Easy** | Moderate | Easy/Moderate | Easy/Moderate | Very Steep | Moderate |
-| **Size (Minified)**| **< 10KB** | ~130KB | ~100KB | ~20KB (compiled) | > 200KB | ~22KB |
+| **Size (Minified)**| **< 20KB** | ~130KB | ~100KB | ~20KB (compiled) | > 200KB | ~22KB |
 | **Component Syntax**| **Native Functions** | JSX | `.vue` files | `.svelte` files | TypeScript Decorators | JSX |
 | **Time Travel Debug**| **Built-in `Vault`**| 3rd Party (Redux) | 3rd Party (Pinia) | Manual | 3rd Party (NgRx)| Manual |
 | **Universal Imports**| **Built-in `Bridge`**| N/A | N/A | N/A | N/A | N/A |
