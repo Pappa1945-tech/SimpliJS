@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS - Todo App</title>
+    <script src="../../dist/simplijs.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fafafa; padding: 2rem; max-width: 500px; margin: 0 auto; }
+        .todo-app { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h1 { margin-top: 0; color: #333; }
+        input[type="text"] { width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; margin-bottom: 1rem; }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 1rem; width: 100%; margin-bottom: 1rem; }
+        button:hover { background: #218838; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 10px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { background: #dc3545; padding: 5px 10px; width: auto; margin-bottom: 0; font-size: 0.8rem; }
+        .delete-btn:hover { background: #c82333; }
+        .done { text-decoration: line-through; color: #888; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const { reactive, component, createApp } = SimpliJS;
+
+        const state = reactive({
+            todos: [
+                { id: 1, text: 'Learn Web Components', done: true },
+                { id: 2, text: 'Build SimpliJS', done: false },
+                { id: 3, text: 'Write Examples', done: false },
+            ],
+            inputValue: ''
+        });
+
+        // Handlers
+        window.updateInput = (e) => {
+            state.inputValue = e.target.value;
+        };
+
+        window.addTodo = () => {
+            if (state.inputValue.trim()) {
+                state.todos.push({
+                    id: Date.now(),
+                    text: state.inputValue,
+                    done: false
+                });
+                state.inputValue = '';
+            }
+        };
+
+        window.toggleTodo = (id) => {
+            const todo = state.todos.find(t => t.id === id);
+            if (todo) todo.done = !todo.done;
+        };
+
+        window.deleteTodo = (id) => {
+            state.todos = state.todos.filter(t => t.id !== id);
+        };
+
+        component('todo-app', () => {
+            return () => `
+                <div class="todo-app">
+                    <h1>Simpli Tasks</h1>
+                    <div style="display:flex; gap: 10px;">
+                        <input type="text" value="${state.inputValue}" oninput="updateInput(event)" placeholder="What needs to be done?" onkeypress="event.key === 'Enter' && addTodo()">
+                        <button onclick="addTodo()" style="width: auto;">Add</button>
+                    </div>
+                    
+                    <ul>
+                        ${state.todos.map(todo => `
+                            <li>
+                                <span class="${todo.done ? 'done' : ''}" style="cursor:pointer;" onclick="toggleTodo(${todo.id})">
+                                    ${todo.done ? '✅' : '⏳'} ${todo.text}
+                                </span>
+                                <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
+                            </li>
+                        `).join('')}
+                        ${state.todos.length === 0 ? '<li>No tasks left! Great job!</li>' : ''}
+                    </ul>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 1rem;">
+                        Total: ${state.todos.length} | Done: ${state.todos.filter(t=>t.done).length}
+                    </div>
+                </div>
+            `;
+        });
+
+        createApp('#app').view(() => '<todo-app></todo-app>').mount();
+    </script>
+</body>
+</html>

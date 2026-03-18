@@ -1,0 +1,151 @@
+/**
+ * SimpliJS - The Python of JavaScript Frameworks
+ * Copyright (c) 2026 Subhamoy Bhattacharjee
+ * Website: https://www.sbtech.co.in
+ * 
+ * Licensed under Apache License 2.0
+ * See LICENSE file for full terms
+ * 
+ * @author Subhamoy Bhattacharjee
+ * @website https://www.sbtech.co.in
+ * @repository https://github.com/Pappa1945-tech/SimpliJS
+ */
+import { domPatch } from './renderer.js';
+import { effect } from './reactive.js';
+import { warn } from './utils.js';
+
+export const bus = (function() {
+  const target = new EventTarget();
+  const listeners = new WeakMap();
+  return {
+    on(event, callback) {
+      const handler = (e) => callback(e.detail);
+      listeners.set(callback, handler);
+      target.addEventListener(event, handler);
+    },
+    emit(event, data) {
+      target.dispatchEvent(new CustomEvent(event, { detail: data }));
+    },
+    off(event, callback) {
+      const handler = listeners.get(callback);
+      if (handler) target.removeEventListener(event, handler);
+    }
+  };
+})();
+
+export const emit = bus.emit;
+export const on = bus.on;
+
+export function createApp(rootSelector) {
+  let viewFn = null;
+
+  return {
+    bus,
+    view(fn) {
+      viewFn = fn;
+      return this;
+    },
+    mount() {
+      if (typeof window === 'undefined') return this;
+      
+      const root = document.querySelector(rootSelector);
+      if (!root) {
+        console.error(`[SimpliJS error]: Root element ${rootSelector} not found.`);
+        return this;
+      }
+      
+      // If the root already has content (SSR), we should hydrate instead of just patching
+      if (root.children.length > 0 && !root.hasAttribute('data-hydrated')) {
+        hydrate(root);
+      }
+
+      if (viewFn) {
+        effect(() => {
+          domPatch(root, viewFn());
+        });
+      }
+      return this;
+    },
+    form(options) {
+      return async (e) => {
+        e.preventDefault();
+        const data = {};
+        const formData = new FormData(e.target);
+        let hasErrors = false;
+        const errors = {};
+        
+        Array.from(e.target.elements).forEach(el => el.classList.remove('is-invalid'));
+
+        options.fields.forEach(field => {
+          data[field] = formData.get(field);
+          if (options.validate && options.validate[field]) {
+            const error = options.validate[field](data[field], data);
+            if (error) {
+              warn(`Validation failed for '${field}'`, error);
+              hasErrors = true;
+              errors[field] = error;
+              
+              const fieldEl = e.target.elements[field];
+              if (fieldEl) fieldEl.classList.add('is-invalid');
+            }
+          }
+        });
+
+        if (hasErrors && options.onError) {
+          options.onError(errors);
+        }
+
+        if (!hasErrors && options.submit) {
+          if (options.onError) options.onError({});
+          await options.submit(data);
+        }
+      };
+    }
+  }
+}
+
+export function hydrate(rootElement = document) {
+  if (typeof window === 'undefined') return;
+  
+  const elements = rootElement.querySelectorAll('[simpli-island]');
+  elements.forEach(el => {
+    const componentName = el.getAttribute('simpli-island');
+    if (!componentName) return;
+    
+    if (!el.hasAttribute('data-hydrated')) {
+      const loadStrategy = 
+        el.hasAttribute('data-client:idle') ? 'idle' :
+        el.hasAttribute('data-client:visible') ? 'visible' : 'load';
+        
+      const doHydrate = () => {
+        // Find existing state if any
+        const stateId = el.getAttribute('data-state-id');
+        const initialState = (window.__SIMPLI_STATE__ && stateId) ? window.__SIMPLI_STATE__[stateId] : null;
+
+        const customElement = document.createElement(componentName);
+        if (initialState) {
+          customElement._initialState = initialState;
+        }
+
+        // Move children if needed
+        while (el.firstChild) customElement.appendChild(el.firstChild);
+        el.replaceWith(customElement);
+        customElement.setAttribute('data-hydrated', 'true');
+      };
+
+      if (loadStrategy === 'idle' && 'requestIdleCallback' in window) {
+        requestIdleCallback(doHydrate);
+      } else if (loadStrategy === 'visible' && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            doHydrate();
+            observer.disconnect();
+          }
+        });
+        observer.observe(el);
+      } else {
+        doHydrate();
+      }
+    }
+  });
+}

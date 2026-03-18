@@ -1,0 +1,75 @@
+{
+  "name": "@simplijs/simplijs",
+  "version": "3.2.0",
+  "description": "SimpliJS — Ultra-lightweight JavaScript framework. Zero config, HTML-first reactivity, <20 KB, native ESM/CDN, built-in routing/SSG/SEO, React/Vue/Svelte Bridge, and Time Vault state time-travel. The anti-build movement framework.",
+  "keywords": [
+    "javascript-framework",
+    "reactive",
+    "html-first",
+    "zero-config",
+    "no-build",
+    "cdn",
+    "vanilla-js",
+    "time-travel",
+    "bridge",
+    "ssr",
+    "ssg",
+    "lightweight",
+    "esm"
+  ],
+  "homepage": "https://sbtech.co.in/simplijs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pappa1945-tech/SimpliJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pappa1945-tech/SimpliJS/issues"
+  },
+  "author": {
+    "name": "Subhamoy Bhattacharjee",
+    "email": "support@sbtech.co.in",
+    "url": "https://sbtech.co.in"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/simplijs.js",
+  "module": "./dist/simplijs.js",
+  "types": "./simplijs.d.ts",
+  "exports": {
+    ".": {
+      "types": "./simplijs.d.ts",
+      "default": "./dist/simplijs.js"
+    },
+    "./ssg": {
+      "types": "./ssg.d.ts",
+      "default": "./ssg.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "*.d.ts",
+    "ssg.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "node tests/run.js",
+    "playground": "cd playground && npx serve .",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Pappa1945-tech"
+  }
+}

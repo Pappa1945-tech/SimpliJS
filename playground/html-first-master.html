@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS | HTML-First Master Showcase</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        aside {
+            width: 280px;
+            background: #020617;
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        nav button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        nav button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .demo-container {
+            max-width: 800px;
+            width: 100%;
+            display: none;
+        }
+
+        .demo-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        p.desc {
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        button.action {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.action:hover {
+            background: var(--primary-hover);
+        }
+
+        .code-preview {
+            background: #000;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            background: #334155;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body s-app s-state="{ currentTab: 'basics' }">
+
+    <aside>
+        <div class="logo">SimpliJS Showcase</div>
+        <nav>
+            <button s-class="{ active: currentTab === 'basics' }" s-click="currentTab = 'basics'">01 Basics</button>
+            <button s-class="{ active: currentTab === 'logic' }" s-click="currentTab = 'logic'">02 Logic &
+                Loops</button>
+            <button s-class="{ active: currentTab === 'events' }" s-click="currentTab = 'events'">03 Events &
+                Keys</button>
+            <button s-class="{ active: currentTab === 'forms' }" s-click="currentTab = 'forms'">04 Forms &
+                Validation</button>
+            <button s-class="{ active: currentTab === 'async' }" s-click="currentTab = 'async'">05 Async Fetch</button>
+            <button s-class="{ active: currentTab === 'advanced' }" s-click="currentTab = 'advanced'">06 Advanced
+                Utils</button>
+        </nav>
+    </aside>
+
+    <main>
+        <!-- TAB 01: BASICS -->
+        <div class="demo-container" s-class="{ active: currentTab === 'basics' }">
+            <div class="card" s-state="{ name: 'Developer', theme: 'indigo' }">
+                <h2>The Basics</h2>
+                <p class="desc">Reactive state, text interpolation, and attribute binding.</p>
+
+                <h3>Hello, {name}!</h3>
+                <input s-bind="name" placeholder="Type your name...">
+
+                <div style="margin-top: 1rem;">
+                    <label>Choose a color theme:</label>
+                    <select s-bind="theme">
+                        <option value="indigo">Indigo</option>
+                        <option value="rose">Rose</option>
+                        <option value="emerald">Emerald</option>
+                    </select>
+                </div>
+
+                <div s-style="{ backgroundColor: theme === 'indigo' ? '#6366f1' : (theme === 'rose' ? '#f43f5e' : '#10b981') }"
+                    style="height: 50px; border-radius: 0.5rem; margin-top: 1rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                    Bound Style: {theme}
+                </div>
+
+                <div class="code-preview" s-ignore>
+                    &lt;h1&gt;Hello, {name}&lt;/h1&gt;
+                    &lt;input s-bind="name"&gt;
+                    &lt;div s-style="{ backgroundColor: themeColor }"&gt;...&lt;/div&gt;
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 02: LOGIC & LOOPS -->
+        <div class="demo-container" s-class="{ active: currentTab === 'logic' }">
+            <div class="card"
+                s-state="{ showList: true, tasks: ['Learn SimpliJS', 'Star Repo', 'Build App'], nextTask: '' }">
+                <h2>Logic & Loops</h2>
+                <p class="desc">Conditional rendering and dynamic lists.</p>
+
+                <div style="margin-bottom: 2rem;">
+                    <button class="action" s-click="showList = !showList">
+                        {showList ? 'Hide' : 'Show'} List
+                    </button>
+                </div>
+
+                <div s-show="showList">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input s-bind="nextTask" placeholder="Add a new task..." style="margin-bottom: 0;">
+                        <button class="action"
+                            s-click="if(nextTask) { tasks.push(nextTask); nextTask = ''; }">Add</button>
+                    </div>
+
+                    <div s-if="tasks.length === 0" style="text-align: center; color: var(--text-dim); padding: 1rem;">
+                        No tasks left! 🎉
+                    </div>
+                    <div s-else>
+                        <div class="list-item" s-for="task, i in tasks" s-key="task">
+                            <span><span class="badge">{i + 1}</span> {task}</span>
+                            <button style="background: transparent; border: none; color: #ef4444; cursor: pointer;"
+                                s-click="tasks.splice(i, 1)">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-preview" s-ignore>
+                    &lt;div s-if="tasks.length === 0"&gt;Empty&lt;/div&gt;
+                    &lt;div s-else&gt;
+                    &lt;div s-for="task, i in tasks"&gt; {task} &lt;/div&gt;
+                    &lt;/div&gt;
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 03: EVENTS -->
+        <div class="demo-container" s-class="{ active: currentTab === 'events' }">
+            <div class="card" s-state="{ status: 'Waiting...', isHovered: false }">
+                <h2>Events & Keyboard</h2>
+                <p class="desc">Handling clicks, hovers, and specific key presses.</p>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div s-hover="status = 'Hovering!'"
+                        style="padding: 2rem; border: 2px dashed #475569; text-align: center; border-radius: 0.5rem; cursor: pointer;">
+                        Hover me!
+                    </div>
+
+                    <input s-key="enter:status = 'Enter Pressed!'" s-key="escape:status = 'Escape Pressed!'"
+                        placeholder="Type and press Enter or Escape...">
+
+                    <div style="font-size: 1.2rem; text-align: center; font-weight: 600; color: #818cf8;">
+                        Last Event: {status}
+                    </div>
+                </div>
+
+                <div class="code-preview" s-ignore>
+                    &lt;div s-hover="status = 'Hover!'"&gt;...&lt;/div&gt;
+                    &lt;input s-key="enter:sendMsg()"&gt;
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 04: FORMS -->
+        <div class="demo-container" s-class="{ active: currentTab === 'forms' }">
+            <div class="card" s-state="{ email: '', agreed: false, errors: {} }">
+                <h2>Forms & Validation</h2>
+                <p class="desc">Manage form state and input-level validation.</p>
+
+                <form s-submit="alert('Form Submitted: ' + email)">
+                    <div>
+                        <label>Email Address:</label>
+                        <input s-bind="email" s-validate="required" placeholder="you@example.com">
+                        <p s-error="email" style="color: #f87171; font-size: 0.85rem; margin-bottom: 1rem;"></p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <input type="checkbox" s-model="agreed" style="width: auto; margin-bottom: 0;">
+                        <label>I agree to the terms and conditions</label>
+                    </div>
+
+                    <button class="action" s-attr:disabled="!agreed || Object.keys(errors).length > 0">
+                        Create Account
+                    </button>
+                    <p s-if="!agreed" style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">
+                        * You must agree to terms to proceed
+                    </p>
+                </form>
+
+                <div class="code-preview" s-ignore>
+                    &lt;input s-bind="email" s-validate="required"&gt;
+                    &lt;p s-error="email"&gt;&lt;/p&gt;
+                    &lt;input type="checkbox" s-model="agreed"&gt;
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 05: ASYNC -->
+        <div class="demo-container" s-class="{ active: currentTab === 'async' }">
+            <div class="card" s-state="{ apiUrl: '', data: null, error: null, loading: false }">
+                <h2>Async Data</h2>
+                <p class="desc">Automated fetching with loading and error states.</p>
+
+                <button class="action" s-click="apiUrl = 'https://jsonplaceholder.typicode.com/users'">
+                    Fetch Users List
+                </button>
+
+                <div s-fetch="apiUrl">
+                    <div s-loading style="text-align: center; padding: 2rem;">
+                        ⏳ Loading users...
+                    </div>
+
+                    <div s-error
+                        style="color: #f87171; background: rgba(248,113,113,0.1); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                        Failed to fetch!
+                    </div>
+
+                    <div s-if="data" style="margin-top: 1.5rem;">
+                        <div class="list-item" s-for="user in data" s-key="user.id">
+                            <div>
+                                <div style="font-weight: 600;">{user.name}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-dim);">{user.email}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-preview" s-ignore>
+                    &lt;div s-state="{ apiUrl: '' }"&gt;
+                    &lt;button s-click="apiUrl = '...'"&gt;Fetch&lt;/button&gt;
+                    &lt;div s-fetch="apiUrl"&gt;
+                    &lt;div s-loading&gt;Loading...&lt;/div&gt;
+                    &lt;div s-for="item in data"&gt; {item.name} &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;/div&gt;
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 06: ADVANCED -->
+        <div class="demo-container" s-class="{ active: currentTab === 'advanced' }">
+            <div class="card" s-state="{ onceVal: 'Initial' }">
+                <h2>Advanced Utilities</h2>
+                <p class="desc">Lazy loading, refs, watch, and performance tools.</p>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div>
+                        <label>Reactive input (updates below):</label>
+                        <input s-bind="onceVal">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <strong>Normal (Reactive):</strong><br>
+                            {onceVal}
+                        </div>
+                        <div s-once style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <strong>s-once (Static):</strong><br>
+                            {onceVal}
+                        </div>
+                    </div>
+
+                    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem;">
+                        <strong>Lazy Image Example:</strong><br>
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">The image below only starts loading when
+                            it enters the viewport.</p>
+                        <img s-lazy="'https://picsum.photos/400/200?random=' + Date.now()"
+                            style="width: 100%; height: 150px; border-radius: 0.5rem; background: #334155; margin-top: 0.5rem; object-fit: cover;">
+                    </div>
+                </div>
+
+                <div class="code-preview" s-ignore>
+                    &lt;div s-once&gt;Static {__v}&lt;/div&gt;
+                    &lt;img s-lazy="imageUrl"&gt;
+                    &lt;div s-memo="expensiveData"&gt;...&lt;/div&gt;
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../dist/simplijs.js"></script>
+    <script>
+        // No custom scripts needed for Section 05 anymore!
+    </script>
+</body>
+
+</html>

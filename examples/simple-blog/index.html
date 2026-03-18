@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS - Simple Blog (Routing)</title>
+    <script src="../../dist/simplijs.js"></script>
+    <style>
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 1rem; }
+        header { border-bottom: 2px solid #eee; padding-bottom: 1rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; }
+        nav a { margin-left: 1rem; text-decoration: none; color: #0066cc; font-family: sans-serif; font-weight: bold; }
+        nav a:hover { text-decoration: underline; }
+        .post-list a { display: block; font-size: 1.5rem; margin-bottom: 1rem; color: #222; text-decoration: none; border-bottom: 1px solid #ddd; padding-bottom: 1rem;}
+        .post-list a:hover { color: #0066cc; }
+        .post-list p { font-size: 1rem; color: #666; margin-top: 0.5rem; }
+        .post-content h2 { font-size: 2rem; }
+        .meta { color: #888; font-style: italic; font-size: 0.9rem; }
+        .back-link { display: inline-block; margin-top: 2rem; color: #0066cc; font-family: sans-serif; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SimpliBlog</h1>
+        <nav>
+            <a href="#/">Home</a>
+            <a href="#/about">About</a>
+        </nav>
+    </header>
+
+    <main id="app">
+        <!-- Route content renders here -->
+    </main>
+
+    <script>
+        const { createRouter } = SimpliJS;
+
+        const posts = {
+            1: { title: "Welcome to SimpliJS", date: "Oct 10, 2026", excerpt: "SimpliJS is a tiny modern framework...", content: "SimpliJS is a tiny modern framework. It allows you to build reactive web apps without a build step. Enjoy building software by focusing on standard Web APIs." },
+            2: { title: "Why Less is More", date: "Oct 15, 2026", excerpt: "Zero configuration, zero headaches...", content: "Zero configuration, zero headaches. When we remove build tools, we get back to the core of web development: HTML, CSS, and JS. SimpliJS embraces this." }
+        };
+
+        const pages = {
+            home: () => `
+                <div class="post-list">
+                    ${Object.entries(posts).map(([id, post]) => `
+                        <a href="#/post/${id}">
+                            ${post.title}
+                            <p>${post.excerpt}</p>
+                        </a>
+                    `).join('')}
+                </div>
+            `,
+            about: () => `
+                <div class="post-content">
+                    <h2>About Us</h2>
+                    <p>This is a simple blog example demonstrating the <b>SimpliJS Router</b>.</p>
+                </div>
+            `,
+            post: (id) => {
+                const post = posts[id];
+                if (!post) return `<h2>Post not found</h2><a href="#/" class="back-link">← Back Home</a>`;
+                return `
+                    <div class="post-content">
+                        <h2>${post.title}</h2>
+                        <div class="meta">Published on ${post.date}</div>
+                        <p>${post.content}</p>
+                        <a href="#/" class="back-link">← Back Home</a>
+                    </div>
+                `;
+            }
+        };
+
+        // Advanced matching using window.location.hash parsed dynamically
+        const router = createRouter({
+            '#/': pages.home,
+            '#/about': pages.about,
+            '*': () => {
+                const hash = window.location.hash;
+                if (hash.startsWith('#/post/')) {
+                    const id = hash.split('/')[2];
+                    return pages.post(id);
+                }
+                return '<h1>404 Not Found</h1>';
+            }
+        }, '#app');
+    </script>
+</body>
+</html>

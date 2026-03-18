@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SimpliJS Playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; line-height: 1.5; }
+    .box { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    nav a { margin-right: 15px; color: blue; text-decoration: none; font-weight: bold; }
+    button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .error { color: red; font-size: 0.9em; margin-top: 5px; }
+    #app { margin-top: 20px; min-height: 200px; border: 2px dashed #eee; padding: 20px; }
+    
+    /* Utility for islands */
+    .island-container { background: #f9f9f9; padding: 10px; border-left: 4px solid #4CAF50; margin-top: 20px;}
+  </style>
+</head>
+<body>
+
+  <h1>SimpliJS Testing Playground 🧪</h1>
+  
+  <nav>
+    <a href="#/home">Home (Component)</a>
+    <a href="#/form">Form Demo</a>
+    <a href="#/async">Async State</a>
+    <a href="#/missing">File Router Fallback</a>
+  </nav>
+
+  <!-- Router Outlet -->
+  <div id="app"></div>
+
+  <!-- Island Architecture Test -->
+  <h2>Islands Architecture Hydration</h2>
+  <div class="island-container">
+    <div simpli-island="lazy-island" data-client:idle>
+      <i>[Simpli-Island] Waiting for idle to hydrate...</i>
+    </div>
+  </div>
+
+  <script type="module" src="/playground/app.js"></script>
+</body>
+</html>

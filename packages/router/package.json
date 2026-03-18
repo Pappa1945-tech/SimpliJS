@@ -1,0 +1,12 @@
+{
+  "name": "@simplijs/router",
+  "version": "1.0.0",
+  "description": "Professional declarative routing for SimpliJS with guards and transitions",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@simplijs/simplijs": "*"
+  }
+}

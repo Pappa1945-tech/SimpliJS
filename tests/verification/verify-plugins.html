@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SimpliJS | Plugin Ecosystem Verification</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
+        .test-card { background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155; }
+        .pass { color: #34d399; }
+        .fail { color: #f87171; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>SimpliJS Plugin Ecosystem Verification</h1>
+    <div id="summary">Testing plugins...</div>
+    <hr>
+
+    <div id="tests">
+        <div class="test-card" id="test-auth">
+            <div class="status" id="status-auth">1. @simplijs/auth...</div>
+            <div id="auth-ui"></div>
+        </div>
+        <div class="test-card" id="test-vault">
+            <div class="status" id="status-vault">2. @simplijs/vault-pro...</div>
+            <div id="vault-out"></div>
+        </div>
+        <div class="test-card" id="test-router">
+            <div class="status" id="status-router">3. @simplijs/router...</div>
+            <div id="router-view"></div>
+        </div>
+        <div class="test-card" id="test-bridge">
+            <div class="status" id="status-bridge">4. @simplijs/bridge-adapters...</div>
+            <div id="bridge-out"></div>
+        </div>
+        <div class="test-card" id="test-devtools">
+            <div class="status" id="status-devtools">5. @simplijs/devtools...</div>
+        </div>
+        <div class="test-card" id="test-forms">
+            <div class="status" id="status-forms">6. @simplijs/forms...</div>
+            <div id="form-out"></div>
+        </div>
+    </div>
+
+    <!-- SimpliJS Core Mock/Local -->
+    <script type="module">
+        import * as Simpli from '../../dist/simplijs.esm.js?v=2';
+        window.Simpli = Simpli; // Plugins expect it here
+        
+        import { createAuth, AuthUI } from '../../packages/auth/index.js';
+        import { createVault } from '../../packages/vault/index.js';
+        import { createRouter } from '../../packages/router/index.js';
+        import { bridge } from '../../packages/bridge/index.js';
+        import { initDevTools } from '../../packages/devtools/index.js';
+        import { createForm } from '../../packages/forms/index.js';
+
+        const results = [];
+        function assert(cond, msg) { results.push({ cond, msg }); return cond; }
+
+        try {
+            // 1. Auth
+            const auth = createAuth({ persist: false });
+            assert(!!auth.social.loginWithGoogle, 'Auth social adapter failed');
+            document.getElementById('auth-ui').innerHTML = AuthUI.loginForm('handleLogin');
+            updateStatus('status-auth', true);
+
+            // 2. Vault Pro
+            const store = createVault({ count: 0 }, { persist: false });
+            store.count++;
+            store.vault.undo();
+            assert(store.count === 0, 'Vault Undo failed');
+            updateStatus('status-vault', store.count === 0);
+
+            // 3. Router
+            const router = createRouter({
+                '/': 'Home',
+                '/test': 'Test'
+            }, { root: '#router-view', mode: 'hash' });
+            assert(!!router.navigate, 'Router failed to initialize');
+            updateStatus('status-router', true);
+
+            // 4. Bridge
+            assert(!!bridge.react && !!bridge.vue, 'Bridge adapters missing');
+            updateStatus('status-bridge', true);
+
+            // 5. DevTools
+            initDevTools(null, { enableFloatingUI: false });
+            assert(!!window.SimpliDevTools, 'DevTools initialization failed');
+            updateStatus('status-devtools', true);
+
+            // 6. Forms
+            const form = createForm({ name: '' }, { validation: { name: { required: true } } });
+            form.data.name = '';
+            assert(form.validate() === false, 'Form validation failed to catch error');
+            updateStatus('status-forms', form.validate() === false);
+
+            document.getElementById('summary').innerHTML = '<h2 class="pass">All Plugin API Tests Passed!</h2>';
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('summary').innerHTML = `<h2 class="fail">Tests Failed: ${e.message}</h2>`;
+        }
+
+        function updateStatus(id, passed) {
+            const el = document.getElementById(id);
+            el.innerText += passed ? ' [PASS]' : ' [FAIL]';
+            el.className += passed ? ' pass' : ' fail';
+        }
+    </script>
+</body>
+</html>

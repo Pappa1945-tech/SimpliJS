@@ -1,0 +1,12 @@
+{
+  "name": "@simplijs/forms",
+  "version": "1.0.0",
+  "description": "Professional form handling, validation, and wizards for SimpliJS",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@simplijs/simplijs": "*"
+  }
+}

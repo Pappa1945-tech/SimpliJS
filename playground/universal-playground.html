@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS | Universal Playground</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #030712;
+            --sidebar-bg: rgba(17, 24, 39, 0.95);
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.3);
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(31, 41, 55, 0.5);
+            --glass: rgba(255, 255, 255, 0.02);
+            --sidebar-width: 380px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+        }
+
+        aside {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(30px);
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 32px 28px; border-bottom: 1px solid var(--border); }
+        .logo-container { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+        .logo-text { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; color: var(--accent); }
+        .version-badge { font-size: 0.7rem; font-weight: 800; background: var(--accent); color: var(--bg); padding: 4px 10px; border-radius: 99px; text-transform: uppercase; }
+
+        .search-input {
+            width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 14px;
+            color: white; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s;
+        }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); background: rgba(0,0,0,0.4); }
+
+        .feature-list { flex: 1; overflow-y: auto; padding: 20px; }
+        .category-group { margin-bottom: 28px; }
+        .category-title { padding: 10px 14px; font-size: 0.75rem; font-weight: 950; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7; }
+        
+        .feature-item {
+            padding: 12px 14px; margin: 4px 0; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 16px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent;
+        }
+        .feature-item:hover { background: var(--glass); border-color: var(--border); }
+        .feature-item.active { background: var(--accent-glow); border-color: rgba(56, 189, 248, 0.5); color: var(--accent); transform: translateX(4px); }
+        .feature-id { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; opacity: 0.3; width: 28px; }
+        .feature-name { font-size: 0.95rem; font-weight: 600; }
+
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .content-header { padding: 48px 64px 32px 64px; }
+        .content-header h1 { font-size: 3.2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 12px; }
+        .content-header p { color: var(--text-muted); font-size: 1.2rem; max-width: 900px; line-height: 1.7; font-weight: 500; }
+
+        .playground-workspace { flex: 1; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; padding: 0 64px 64px 64px; overflow: hidden; }
+        .window-pane { background: var(--card-bg); border: 1px solid var(--border); border-radius: 32px; display: flex; flex-direction: column; overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
+        .pane-header { padding: 20px 32px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .pane-title { font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
+        .pane-title i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+        
+        .pane-body { flex: 1; overflow-y: auto; position: relative; }
+        #demo-canvas { background: white; min-height: 100%; padding: 56px; color: #0f172a; }
+        #code-display { padding: 0; background: #010409; height: 100%; margin: 0; }
+        pre[class*="language-"] { margin: 0 !important; padding: 32px !important; background: transparent !important; font-size: 1rem !important; line-height: 1.8 !important; }
+
+        .btn { background: var(--accent); color: var(--bg); border: none; padding: 14px 28px; border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 12px; }
+        .btn:hover { transform: translateY(-4px); box-shadow: 0 12px 30px var(--accent-glow); filter: brightness(1.1); }
+        .btn:active { transform: translateY(-1px); }
+        .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; }
+        .btn-outline:hover { background: var(--glass); border-color: rgba(255,255,255,0.2); }
+
+        .action-bar { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; z-index: 20; }
+
+        /* Demo Components Styling */
+        .demo-card { border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px; background: #ffffff; margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border-left: 6px solid #3b82f6; color: #1e293b; }
+        .demo-card h3 { margin-bottom: 12px; font-weight: 700; color: #0f172a; }
+        .demo-input { width: 100%; padding: 16px 22px; border: 2px solid #cbd5e1; border-radius: 14px; margin: 14px 0; font-size: 1.1rem; outline: none; transition: 0.2s; font-family: inherit; }
+        .demo-input:focus { border-color: #3b82f6; ring: 4px rgba(59, 130, 246, 0.1); }
+        .demo-btn { background: #1e293b; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; margin: 8px 6px 8px 0; font-size: 1rem; }
+        .demo-btn:hover { background: #334155; transform: scale(1.05); }
+        .demo-label { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; }
+        
+        .loading-pulse { animation: pulse 1.5s infinite; color: #64748b; font-weight: 700; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        @media (max-width: 1400px) {
+            .playground-workspace { grid-template-columns: 1fr; overflow-y: auto; }
+            .window-pane { min-height: 550px; }
+            body { overflow-y: auto; height: auto; }
+            aside { height: 100vh; position: sticky; top: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <span style="font-size: 2.5rem">💎</span>
+                <div>
+                    <div class="logo-text">SimpliJS</div>
+                    <span class="version-badge">v1.5.0 MASTER</span>
+                </div>
+            </div>
+            <input type="text" id="search" class="search-input" placeholder="Search 54 core features...">
+        </div>
+        <div class="feature-list" id="feature-list"></div>
+    </aside>
+
+    <main>
+        <div class="content-header">
+            <h1 id="feature-title">SimpliJS Playground</h1>
+            <p id="feature-desc">The ultimate interactive environment to master the 54 features that make SimpliJS the most accessible framework for modern developers.</p>
+        </div>
+
+        <div class="playground-workspace">
+            <div class="window-pane">
+                <div class="pane-header">
+                    <div class="pane-title"><i></i> Interactive Visual Canvas</div>
+                    <button class="btn btn-outline" style="padding: 8px 18px; font-size: 0.8rem;" id="reset-btn">Reset Interface</button>
+                </div>
+                <div class="pane-body">
+                    <div id="demo-canvas"></div>
+                </div>
+            </div>
+
+            <div class="window-pane">
+                <div class="pane-header">
+                    <div class="pane-title"><i></i> Source Code Inspection</div>
+                    <button class="btn btn-outline" style="padding: 8px 18px; font-size: 0.8rem;" id="copy-btn">Copy Snippet</button>
+                </div>
+                <div class="pane-body" style="background: #010409;">
+                    <pre id="code-display" class="language-javascript"><code></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn" id="run-btn">Run Snippet ⚡</button>
+        </div>
+    </main>
+
+    <script>
+        // --- INLINED SimpliJS ENGINE START ---
+        var SimpliJS = (() => {
+            var __defProp = Object.defineProperty;
+            var __export = (target, all) => { for (var name in all) __defProp(target, name, { get: all[name], enumerable: true }); };
+            var index_exports = {};
+            __export(index_exports, {
+                component: () => component, computed: () => computed, createApp: () => createApp,
+                directives: () => directives, emit: () => emit, on: () => on,
+                reactive: () => reactive, ref: () => ref, use: () => use, watch: () => watch
+            });
+            var activeEffect = null;
+            function effect(fn) {
+                const effectFn = () => { activeEffect = effectFn; try { fn(); } finally { activeEffect = null; } };
+                effectFn();
+            }
+            function reactive(obj, onSet = null) {
+                if (typeof obj !== "object" || obj === null) return obj;
+                const depsMap = new Map();
+                return new Proxy(obj, {
+                    get(target, key, receiver) {
+                        if (activeEffect) {
+                            let deps = depsMap.get(key);
+                            if (!deps) { deps = new Set(); depsMap.set(key, deps); }
+                            deps.add(activeEffect);
+                        }
+                        const res = Reflect.get(target, key, receiver);
+                        return typeof res === "object" ? reactive(res, onSet) : res;
+                    },
+                    set(target, key, value, receiver) {
+                        const result = Reflect.set(target, key, value, receiver);
+                        const deps = depsMap.get(key);
+                        if (deps) deps.forEach(f => f());
+                        if (onSet) onSet();
+                        return result;
+                    }
+                });
+            }
+            function ref(value = null) { return reactive({ value }); }
+            function computed(getter) {
+                const result = reactive({ value: null });
+                effect(() => { result.value = getter(); });
+                return result;
+            }
+            function watch(source, callback) {
+                let isFirst = true; let oldValue;
+                effect(() => {
+                    const newValue = typeof source === "function" ? source() : source;
+                    if (!isFirst) callback(newValue, oldValue); else isFirst = false;
+                    oldValue = newValue;
+                });
+            }
+            reactive.vault = function(obj) {
+                let isTravelling = false; let history = [JSON.parse(JSON.stringify(obj))]; let currentIndex = 0;
+                const state = reactive(obj, () => {
+                   if (isTravelling) return;
+                   history = history.slice(0, currentIndex + 1);
+                   history.push(JSON.parse(JSON.stringify(obj)));
+                   currentIndex++;
+                });
+                state.vault = {
+                    back() { if (currentIndex > 0) { isTravelling = true; currentIndex--; Object.assign(state, JSON.parse(JSON.stringify(history[currentIndex]))); setTimeout(() => isTravelling = false, 0); } },
+                    forward() { if (currentIndex < history.length - 1) { isTravelling = true; currentIndex++; Object.assign(state, JSON.parse(JSON.stringify(history[currentIndex]))); setTimeout(() => isTravelling = false, 0); } }
+                };
+                return state;
+            };
+            function domPatch(container, html, host = null) {
+                if (typeof container === "string") container = document.querySelector(container);
+                if (!container) return;
+                const template = document.createElement("template");
+                template.innerHTML = html;
+                const process = (node) => {
+                    if (node.nodeType !== 1) return node;
+                    if (host) {
+                        Array.from(node.attributes).forEach(attr => {
+                            if (attr.name.startsWith("@")) {
+                                const type = attr.name.slice(1);
+                                node.addEventListener(type, (e) => host[attr.value](e));
+                                node.removeAttribute(attr.name);
+                            }
+                            if (attr.name === "ref") { host[attr.value] = { value: node }; }
+                        });
+                    }
+                    Array.from(node.childNodes).forEach(process);
+                    return node;
+                };
+                container.innerHTML = "";
+                Array.from(template.content.childNodes).forEach(n => container.appendChild(process(n.cloneNode(true))));
+            }
+            function component(name, setup) {
+                customElements.define(name, class extends HTMLElement {
+                    connectedCallback() {
+                        this._props = reactive({});
+                        Array.from(this.attributes).forEach(a => this._props[a.name] = a.value);
+                        const res = setup(this, this._props);
+                        if (typeof res === "function") effect(() => domPatch(this, res(), this));
+                        else if (typeof res === "object") {
+                            Object.assign(this, res);
+                            if (res.onMount) res.onMount();
+                            if (res.render) effect(() => domPatch(this, res.render(), this));
+                        }
+                    }
+                });
+            }
+            var bus = new EventTarget();
+            var on = (e, f) => bus.addEventListener(e, (ev) => f(ev.detail));
+            var emit = (e, d) => bus.dispatchEvent(new CustomEvent(e, { detail: d }));
+            function createApp() { return { form: (o) => (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(e.target)); o.submit(d); } }; }
+            var use = { react: (url, tag) => { 
+                component(tag, (el, props) => ({ render: () => `<div style="color:#64748b">React Bridge Mock: ${tag}</div>` }));
+                return tag;
+            }};
+            class SimpliDirectives {
+                constructor() { this.dir = new Map(); this.initHandlers(); }
+                initHandlers() {
+                    this.dir.set("s-state", (el, v, s) => { const ds = new Function(`return ${v}`)(); const cs = reactive(Object.assign(Object.create(s), ds)); el.__s = cs; return cs; });
+                    this.dir.set("s-text", (el, v, s) => effect(() => el.textContent = new Function("s", `with(s){return ${v}}`)(s)));
+                    this.dir.set("s-click", (el, v, s) => el.addEventListener("click", () => new Function("s", `with(s){${v}}`)(s)));
+                    this.dir.set("s-bind", (el, v, s) => { effect(() => el.value = s[v]); el.addEventListener("input", (e) => s[v] = e.target.value); });
+                    this.dir.set("s-if", (el, v, s) => { 
+                        const tpl = el.cloneNode(true); tpl.removeAttribute("s-if"); 
+                        const anc = document.createComment("s-if"); el.replaceWith(anc);
+                        let cur = null;
+                        effect(() => {
+                            const show = !!new Function("s", `with(s){return ${v}}`)(s);
+                            if (show && !cur) { cur = tpl.cloneNode(true); this.scan(cur, s); anc.after(cur); }
+                            else if (!show && cur) { cur.remove(); cur = null; }
+                        });
+                    });
+                    this.dir.set("s-for", (el, v, s) => {
+                        const [it, items] = v.split(" in ");
+                        const tpl = el.cloneNode(true); tpl.removeAttribute("s-for");
+                        const anc = document.createComment("s-for"); el.replaceWith(anc);
+                        let nodes = [];
+                        effect(() => {
+                            nodes.forEach(n => n.remove()); nodes = [];
+                            const list = new Function("s", `with(s){return ${items}}`)(s);
+                            list.forEach((val, i) => {
+                                const cs = reactive(Object.assign(Object.create(s), { [it]: val, i }));
+                                const n = tpl.cloneNode(true); this.scan(n, cs); nodes.push(n); anc.before(n);
+                            });
+                        });
+                    });
+                    this.dir.set("s-fetch", (el, v, s) => {
+                        effect(() => {
+                            const url = new Function("s", `with(s){return ${v}}`)(s);
+                            s.loading = true;
+                            fetch(url).then(r => r.json()).then(d => { s.data = d; s.loading = false; });
+                        });
+                    });
+                }
+                scan(root, s = {}) {
+                    const walk = (n, st) => {
+                        if (n.nodeType !== 1) return;
+                        let cs = st;
+                        if (n.hasAttribute("s-state")) { cs = this.dir.get("s-state")(n, n.getAttribute("s-state"), st); n.removeAttribute("s-state"); }
+                        Array.from(n.attributes).forEach(a => {
+                            if (this.dir.has(a.name)) { this.dir.get(a.name)(n, a.value, cs); n.removeAttribute(a.name); }
+                        });
+                        this.interp(n, cs);
+                        Array.from(n.childNodes).forEach(c => walk(c, cs));
+                    };
+                    walk(root, s);
+                }
+                interp(n, s) {
+                    Array.from(n.childNodes).forEach(c => {
+                        if (c.nodeType === 3 && c.textContent.includes("{")) {
+                            const orig = c.textContent;
+                            effect(() => {
+                                c.textContent = orig.replace(/\{(.+?)\}/g, (_, exp) => {
+                                    try { return new Function("s", `with(s){return ${exp}}`)(s); } catch { return ""; }
+                                });
+                            });
+                        }
+                    });
+                }
+            }
+            var directives = new SimpliDirectives();
+            return { ...index_exports, directives };
+        })();
+        // --- INLINED SimpliJS ENGINE END ---
+
+        const FEATURES = [
+            // CATEGORY: CORE JS API
+            { id: 1, cat: 'Core JS', name: 'Component Registration', desc: 'Define native Custom Elements effortlessly.', code: `const { component } = SimpliJS;\n\ncomponent('simple-tag', () => ({\n  render: () => "<h3>I am a Component!</h3>"\n}));`, html: `<div class="demo-card"><simple-tag></simple-tag></div>` },
+            { id: 2, cat: 'Core JS', name: 'Deeply Reactive State', desc: 'State is tracked using deep Proxies.', code: `const { reactive, component } = SimpliJS;\nconst state = reactive({ count: 0 });\n\ncomponent('reactive-demo', () => ({\n  add: () => state.count++,\n  render: () => \`<h3>Value: \${state.count}</h3><button class="demo-btn" @click="add">Increment</button>\`\n}));`, html: `<div class="demo-card"><reactive-demo></reactive-demo></div>` },
+            { id: 3, cat: 'Core JS', name: 'Reactive Props', desc: 'Sync HTML attributes into a reactive props object.', code: `const { component } = SimpliJS;\n\ncomponent('hello-user', (el, props) => ({\n  render: () => \`<h3>Hello, \${props.name || 'Stranger'}!</h3>\`\n}));`, html: `<div class="demo-card"><hello-user name="Developer"></hello-user></div>` },
+            { id: 4, cat: 'Core JS', name: 'Event Handling', desc: 'Bind native events directly to component methods.', code: `const { component } = SimpliJS;\n\ncomponent('event-demo', () => ({\n  handle: () => alert('Clicked!'),\n  render: () => '<button class="demo-btn" @click="handle">Click Me</button>'\n}));`, html: `<div class="demo-card"><event-demo></event-demo></div>` },
+            { id: 5, cat: 'Core JS', name: 'Computed Properties', desc: 'Derive state based on other reactive variables.', code: `const { reactive, computed, component } = SimpliJS;\nconst s = reactive({ n: 5 });\nconst sq = computed(() => s.n * s.n);\n\ncomponent('comp-demo', () => ({\n  up: () => s.n++,\n  render: () => \`<h3>\${s.n}^2 = \${sq.value}</h3><button class="demo-btn" @click="up">Add 1</button>\`\n}));`, html: `<div class="demo-card"><comp-demo></comp-demo></div>` },
+            { id: 6, cat: 'Core JS', name: 'Side Effects (Watch)', desc: 'Specifically watch a piece of state.', code: `const { reactive, watch, component } = SimpliJS;\nconst s = reactive({ query: '' });\nwatch(() => s.query, (v) => console.log('Updated:', v));\n\ncomponent('watch-demo', () => ({\n  render: () => '<input class="demo-input" oninput="this.closest(\\'watch-demo\\').up(event)" placeholder="Type...">',\n  up: (e) => s.query = e.target.value\n}));`, html: `<div class="demo-card"><watch-demo></watch-demo><p>(Check console)</p></div>` },
+            { id: 7, cat: 'Core JS', name: 'DOM Refs', desc: 'Gain direct access to DOM nodes.', code: `const { ref, component } = SimpliJS;\nconst myRef = ref();\n\ncomponent('ref-demo', () => ({\n  onMount: () => myRef.value.focus(),\n  render: () => '<input ref="myRef" class="demo-input" placeholder="Focused on mount">' \n}));`, html: `<div class="demo-card"><ref-demo></ref-demo></div>` },
+            { id: 8, cat: 'Core JS', name: 'Lifecycle Hooks', desc: 'Hooks for onMount, onUpdate, onDestroy.', code: `const { component } = SimpliJS;\n\ncomponent('life-demo', () => ({\n  onMount: () => alert('Mounted!'),\n  render: () => '<div>Look at the alert!</div>'\n}));`, html: `<div class="demo-card"><life-demo></life-demo></div>` },
+            { id: 9, cat: 'Core JS', name: 'Content Projection', desc: 'Support native slots.', code: `const { component } = SimpliJS;\n\ncomponent('card-box', () => ({\n  render: () => \`<div style="border:2px solid #38bdf8;padding:15px"><h3>Header</h3><slot></slot></div>\`\n}));`, html: `<div class="demo-card"><card-box><p>Slotted content</p></card-box></div>` },
+            { id: 10, cat: 'Core JS', name: 'Global Event Bus', desc: 'emit/on messaging system.', code: `const { emit, on, component } = SimpliJS;\non('ping', (d) => alert(d));\n\ncomponent('bus-demo', () => ({\n  render: () => '<button class="demo-btn" @click="do">Emit</button>',\n  do: () => emit('ping', 'Pong!')\n}));`, html: `<div class="demo-card"><bus-demo></bus-demo></div>` },
+            { id: 11, cat: 'Core JS', name: 'Form Automation', desc: 'Handle form data collection.', code: `const { createApp, component } = SimpliJS;\nconst logic = createApp().form({ submit: d => alert('User: ' + d.user) });\n\ncomponent('login-box', () => ({\n  logic,\n  render: () => \`<form @submit="logic"><input name="user" class="demo-input"><button class="demo-btn">Submit</button></form>\`\n}));`, html: `<div class="demo-card"><login-box></login-box></div>` },
+            { id: 12, cat: 'Core JS', name: 'The Bridge', desc: 'Use React components.', code: `const { use, component } = SimpliJS;\nconst ReactComp = use.react('...', 'react-tag');\n\ncomponent('bridge-demo', () => ({\n  render: () => '<react-tag></react-tag>'\n}));`, html: `<div class="demo-card"><bridge-demo></bridge-demo></div>` },
+            { id: 13, cat: 'Core JS', name: 'The Time Vault', desc: 'State time-travel.', code: `const { reactive, component } = SimpliJS;\nconst s = reactive.vault({ val: 0 });\n\ncomponent('vault-box', () => ({\n  up: () => s.val++,\n  undo: () => s.vault.back(),\n  render: () => \`<h3>Value: \${s.val}</h3><button class="demo-btn" @click="up">Add</button><button class="demo-btn" @click="undo">Undo</button>\`\n}));`, html: `<div class="demo-card"><vault-box></vault-box></div>` },
+            { id: 14, cat: 'HTML-First', name: 's-app', desc: 'Root directive.', code: ``, html: `<div s-app><div class="demo-card">Managed by SimpliJS</div></div>` },
+            { id: 15, cat: 'HTML-First', name: 's-state', desc: 'Initialize state.', code: ``, html: `<div s-app s-state="{ count: 0 }"><div class="demo-card"><p>Count: {count}</p><button class="demo-btn" s-click="count++">Add</button></div></div>` },
+            { id: 16, cat: 'HTML-First', name: 's-global', desc: 'Shared global data.', code: ``, html: `<div s-app s-global="{ site: 'SimpliJS' }"><div class="demo-card">Site: {site}</div></div>` },
+            { id: 17, cat: 'HTML-First', name: 's-bind', desc: '2-way binding.', code: ``, html: `<div s-app s-state="{ name: 'Dev' }"><div class="demo-card"><input s-bind="name" class="demo-input"><p>Hello {name}</p></div></div>` },
+            { id: 18, cat: 'HTML-First', name: 's-text', desc: 'Reactive text.', code: ``, html: `<div s-app s-state="{ t: 'Hello' }"><div class="demo-card" s-text="t"></div></div>` },
+            { id: 19, cat: 'HTML-First', name: 'Interpolation', desc: 'Text interpolation.', code: ``, html: `<div s-app s-state="{ a: 5, b: 10 }"><div class="demo-card">{a} + {b} = {a+b}</div></div>` },
+            { id: 20, cat: 'HTML-First', name: 's-html', desc: 'Raw HTML.', code: ``, html: `<div s-app s-state="{ h: '<b>Bold</b>' }"><div class="demo-card" s-html="h"></div></div>` },
+            { id: 21, cat: 'HTML-First', name: 's-value', desc: '1-way value.', code: ``, html: `<div s-app s-state="{ v: 'Static' }"><div class="demo-card"><input s-value="v" class="demo-input"></div></div>` },
+            { id: 22, cat: 'HTML-First', name: 's-attr', desc: 'Bind attributes.', code: ``, html: `<div s-app s-state="{ c: 'blue' }"><div class="demo-card" s-attr:style="'color:'+c">Blue Text</div></div>` },
+            { id: 23, cat: 'HTML-First', name: 's-class', desc: 'Toggle classes.', code: ``, html: `<div s-app s-state="{ ok: true }"><style>.red{color:red}</style><div class="demo-card" s-class="{red: ok}">Class Red</div></div>` },
+            { id: 24, cat: 'HTML-First', name: 's-style', desc: 'Style objects.', code: ``, html: `<div s-app s-state="{ sz: 24 }"><div class="demo-card" s-style="{ fontSize: sz+'px' }">Sizing</div></div>` },
+            { id: 25, cat: 'HTML-First', name: 's-if', desc: 'Conditionals.', code: ``, html: `<div s-app s-state="{ ok: true }"><div class="demo-card"><div s-if="ok">Visible</div><button class="demo-btn" s-click="ok=!ok">Toggle</button></div></div>` },
+            { id: 26, cat: 'HTML-First', name: 's-else', desc: 'Else fallback.', code: ``, html: `<div s-app s-state="{ ok: false }"><div class="demo-card"><div s-if="ok">IF</div><div s-else>ELSE</div><button class="demo-btn" s-click="ok=!ok">Toggle</button></div></div>` },
+            { id: 27, cat: 'HTML-First', name: 's-show', desc: 'CSS display toggle.', code: ``, html: `<div s-app s-state="{ v: true }"><div class="demo-card" s-show="v">Showing</div></div>` },
+            { id: 28, cat: 'HTML-First', name: 's-hide', desc: 'Inverse show.', code: ``, html: `<div s-app s-state="{ h: true }"><div class="demo-card" s-hide="h">Hidden</div></div>` },
+            { id: 29, cat: 'HTML-First', name: 's-for', desc: 'Loops.', code: ``, html: `<div s-app s-state="{ l: [1,2,3] }"><div class="demo-card"><ul><li s-for="x in l">{x}</li></ul></div></div>` },
+            { id: 30, cat: 'HTML-First', name: 's-key', desc: 'Loop keys.', code: ``, html: `<div s-app s-state="{ l: [1] }"><div s-for="x in l" s-key="x">{x}</div></div>` },
+            { id: 31, cat: 'HTML-First', name: 's-index', desc: 'Loop index.', code: ``, html: `<div s-app s-state="{ l: ['A'] }"><div s-for="x, i in l">{i}: {x}</div></div>` },
+            { id: 32, cat: 'HTML-First', name: 's-click', desc: 'Click handler.', code: ``, html: `<div s-app><button class="demo-btn" s-click="alert('Hi')">Click</button></div>` },
+            { id: 33, cat: 'HTML-First', name: 's-change', desc: 'Change handler.', code: ``, html: `<div s-app s-state="{ v: '' }"><div class="demo-card"><select s-change="v=event.target.value"><option>1</option><option>2</option></select><p>{v}</p></div></div>` },
+            { id: 34, cat: 'HTML-First', name: 's-input', desc: 'Input handler.', code: ``, html: `<div s-app s-state="{ v: '' }"><input class="demo-input" s-input="v=event.target.value"><p>{v}</p></div>` },
+            { id: 35, cat: 'HTML-First', name: 's-submit', desc: 'Form submit.', code: ``, html: `<div s-app><form s-submit="alert('Sent')"><button class="demo-btn">Submit</button></form></div>` },
+            { id: 36, cat: 'HTML-First', name: 's-hover', desc: 'Hover handler.', code: ``, html: `<div s-app s-state="{ h: false }"><div s-hover="h=true">Hover me</div><p>{h?'Hovered!':''}</p></div>` },
+            { id: 37, cat: 'HTML-First', name: 's-key:enter', desc: 'Key listener.', code: ``, html: `<div s-app><input class="demo-input" s-key:enter="alert('Enter')" placeholder="Press Enter"></div>` },
+            { id: 38, cat: 'HTML-First', name: 's-model', desc: 'Model binder.', code: ``, html: `<div s-app s-state="{ ok: false }"><input type="checkbox" s-model="ok"> {ok}</div>` },
+            { id: 39, cat: 'HTML-First', name: 's-validate', desc: 'Validation.', code: ``, html: `<div s-app s-state="{ e: '' }"><input s-bind="e" s-validate="required" class="demo-input"></div>` },
+            { id: 40, cat: 'HTML-First', name: 's-error', desc: 'Error UI.', code: ``, html: `<div s-app s-state="{ e: '' }"><p s-error="e"></p></div>` },
+            { id: 41, cat: 'HTML-First', name: 's-fetch', desc: 'JSON fetch.', code: ``, html: `<div s-app s-state="{ u: 'https://jsonplaceholder.typicode.com/todos/1' }"><div s-fetch="u"><p s-if="loading">Loading...</p><p s-if="data">Title: {data.title}</p></div></div>` },
+            { id: 42, cat: 'HTML-First', name: 's-loading', desc: 'Loading UI.', code: ``, html: `<div s-app><p s-loading>Pulse...</p></div>` },
+            { id: 43, cat: 'HTML-First', name: 's-error (Fetch)', desc: 'Fetch Error.', code: ``, html: `<div s-app s-state="{ u: 'invalid' }"><div s-fetch="u"><p s-error>Error!</p></div></div>` },
+            { id: 44, cat: 'HTML-First', name: 's-component', desc: 'Mount JS.', code: ``, html: `<div s-app><div s-component="'simple-tag'"></div></div>` },
+            { id: 45, cat: 'HTML-First', name: 's-prop', desc: 'Pass props.', code: ``, html: `<div s-app s-state="{ n: 'Bob' }"><hello-user s-prop:name="n"></hello-user></div>` },
+            { id: 46, cat: 'HTML-First', name: 's-slot', desc: 'Slot projection.', code: ``, html: `<div s-app><card-box><p s-slot>Slot content</p></card-box></div>` },
+            { id: 47, cat: 'Routing', name: 's-route', desc: 'SPA Route.', code: ``, html: `<div s-app><div s-route="/home">Home</div><div s-view></div></div>` },
+            { id: 48, cat: 'Routing', name: 's-view', desc: 'Route Outlet.', code: ``, html: `<!-- See 47 -->` },
+            { id: 49, cat: 'Routing', name: 's-link', desc: 'SPA Link.', code: ``, html: `<div s-app><a s-link="/home">Go Home</a></div>` },
+            { id: 50, cat: 'Performance', name: 's-lazy', desc: 'Lazy load.', code: ``, html: `<div s-app><img s-lazy="'...'"></div>` },
+            { id: 51, cat: 'Performance', name: 's-memo', desc: 'Memoize DOM.', code: ``, html: `<div s-app s-state="{ x: 0 }"><div s-memo="x">{x}</div></div>` },
+            { id: 52, cat: 'Performance', name: 's-ref', desc: 'DOM Bridge.', code: ``, html: `<div s-app s-state="{ r: null }"><input s-ref="r"><button s-click="r.focus()">Focus</button></div>` },
+            { id: 53, cat: 'Performance', name: 's-once', desc: 'Static render.', code: ``, html: `<div s-app s-state="{ t: 1 }"><p s-once>{t}</p></div>` },
+            { id: 54, cat: 'Performance', name: 's-ignore', desc: 'Engine skip.', code: ``, html: `<div s-app><div s-ignore>External</div></div>` }
+        ];
+
+        const listEl = document.getElementById('feature-list');
+        const titleEl = document.getElementById('feature-title');
+        const descEl = document.getElementById('feature-desc');
+        const codeEl = document.querySelector('#code-display code');
+        const canvasEl = document.getElementById('demo-canvas');
+        const searchInput = document.getElementById('search');
+
+        function renderList(query = '') {
+            listEl.innerHTML = '';
+            const grouped = FEATURES.reduce((acc, f) => {
+                if (!query || f.name.toLowerCase().includes(query.toLowerCase()) || f.cat.toLowerCase().includes(query.toLowerCase())) {
+                    if (!acc[f.cat]) acc[f.cat] = [];
+                    acc[f.cat].push(f);
+                }
+                return acc;
+            }, {});
+
+            for (const [cat, items] of Object.entries(grouped)) {
+                const group = document.createElement('div');
+                group.className = 'category-group';
+                group.innerHTML = '<div class="category-title">' + cat + '</div>';
+                
+                items.forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'feature-item' + (window.currentId === f.id ? ' active' : '');
+                    item.innerHTML = '<span class="feature-id">' + f.id + '</span><span class="feature-name">' + f.name + '</span>';
+                    item.onclick = () => selectFeature(f);
+                    group.appendChild(item);
+                });
+                listEl.appendChild(group);
+            }
+        }
+
+        function selectFeature(f) {
+            window.currentId = f.id;
+            titleEl.textContent = f.name;
+            descEl.textContent = f.desc;
+            codeEl.textContent = f.code + (f.html ? '\n\n/* HTML USAGE */\n' + f.html : '');
+            Prism.highlightElement(codeEl);
+            renderList(searchInput.value);
+            runDemo(f);
+        }
+
+        function runDemo(f) {
+            canvasEl.innerHTML = f.html || '<p>API Demo</p>';
+            try {
+                if (f.code) {
+                   // Cleanly evaluate code
+                   const runner = new Function('SimpliJS', f.code);
+                   runner(window.SimpliJS);
+                }
+                // Scan for directives
+                setTimeout(() => window.SimpliJS.directives.scan(canvasEl), 20);
+            } catch(e) { console.error(e); }
+        }
+
+        searchInput.oninput = (e) => renderList(e.target.value);
+        document.getElementById('run-btn').onclick = () => {
+             const f = FEATURES.find(x => x.id === window.currentId);
+             if (f) runDemo(f);
+        };
+        document.getElementById('reset-btn').onclick = () => {
+             const f = FEATURES.find(x => x.id === window.currentId);
+             if (f) runDemo(f);
+        };
+        document.getElementById('copy-btn').onclick = () => {
+            const f = FEATURES.find(x => x.id === window.currentId);
+            if (f) {
+                navigator.clipboard.writeText(f.code + '\n' + (f.html || ''));
+                document.getElementById('copy-btn').textContent = 'COPIED';
+                setTimeout(() => document.getElementById('copy-btn').textContent = 'Copy Snippet', 1000);
+            }
+        };
+
+        window.onload = () => { renderList(); if (FEATURES.length > 0) selectFeature(FEATURES[0]); };
+    </script>
+</body>
+</html>
