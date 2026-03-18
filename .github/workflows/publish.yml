@@ -3,9 +3,10 @@ name: Publish to npm
 on:
   push:
     branches:
-      - main  # or 'master' if your default branch is master
+      - main
     paths:
-      - 'package.json'  # Only run when version changes
+      - 'package.json'
+  workflow_dispatch:  # This allows manual triggering
 
 jobs:
   publish:
