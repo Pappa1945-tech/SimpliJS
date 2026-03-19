@@ -176,7 +176,7 @@ Start coding immediately without any installation by importing from a CDN.
 
 ```html
 <script type="module">
-  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.0/dist/simplijs.min.js';
+  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.1/dist/simplijs.min.js';
   
   // Start coding immediately!
 </script>
@@ -185,7 +185,7 @@ Start coding immediately without any installation by importing from a CDN.
 ### 3. Local Download (Manual Setup)
 Download the minified source directly and include it in your project folder. This is perfect for offline development or when you want full control over the source.
 
-1.  Download [simplijs.min.js](https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.0/dist/simplijs.min.js).
+1.  Download [simplijs.min.js](https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.1/dist/simplijs.min.js).
 2.  Include it in your HTML:
 
 ```html
@@ -416,7 +416,7 @@ component('receiver-nav', () => {
 ---
 
 ### 11. Automated Form Validation & UI Feedback
-Bind automated validation logics without `e.preventDefault()` boilerplates. Automatically highlights invalid inputs with `.is-invalid` classes!
+Bind automated validation logic without `e.preventDefault()` boilerplates. Automatically highlights invalid inputs with `.is-invalid` classes!
 
 **How to use:**
 ```javascript
@@ -853,10 +853,15 @@ These plugins are designed to work together. By initializing them and attaching 
 
 ## 🔒 Security Precautions
 
-SimpliJS HTML-First mode uses `new Function()` and `with()` to evaluate expressions in your HTML attributes (`s-*` and `{interpolation}`). 
+SimpliJS is built with a **Security-First** mindset for its directive engine. 
 
-> [!WARNING]
-> **Never bind user-controlled data directly to SimpliJS directives.** If you are displaying user-generated content, always sanitize it beforehand. SimpliJS is designed for developer-authored logic, not for executing untrusted strings.
+### **Safe Evaluation Mode**
+Unlike many frameworks that use raw `eval()`, SimpliJS features a **built-in Safe Proxy layer** for text-based directives (`s-text` and `{interpolation}`). 
+- **Automatic XSS Prevention**: It automatically blocks access to dangerous globals like `window`, `document`, `fetch`, and `XMLHttpRequest`.
+- **Whitelisted Utilities**: Only harmless logic and whitelisted objects (like `Math`, `JSON`, and `Date`) are permitted within these expressions.
+
+> [!NOTE]
+> For event-based directives where full JavaScript power is required (like `s-click`), SimpliJS allows standard execution. As with any framework, you should avoid binding untrusted user-controlled strings directly to executable attributes.
 
 ---
 
