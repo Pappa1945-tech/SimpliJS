@@ -1,6 +1,6 @@
 {
   "name": "@simplijs/simplijs",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "SimpliJS — Ultra-lightweight JavaScript framework. Zero config, HTML-first reactivity, <20 KB, native ESM/CDN, built-in routing/SSG/SEO, React/Vue/Svelte Bridge, and Time Vault state time-travel. The anti-build movement framework.",
   "keywords": [
     "javascript-framework",
