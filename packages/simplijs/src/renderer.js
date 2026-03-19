@@ -100,11 +100,12 @@ export function domPatch(container, html, hostComponent = null) {
         const val = newAttrs[i].value;
         if (oldNode.getAttribute(name) !== val) {
             oldNode.setAttribute(name, val);
-            if (oldNode._props && name !== 'class' && name !== 'style') {
+            if (oldNode._props && !['class', 'style', 'id'].includes(name)) {
               let castVal = val;
               if (castVal === '') castVal = true;
               else if (castVal === 'false') castVal = false;
-              else if (!isNaN(castVal)) castVal = Number(castVal);
+              else if (castVal === 'true') castVal = true;
+              else if (val !== '' && !isNaN(val) && !val.includes(' ')) castVal = Number(val);
               oldNode._props[name] = castVal;
             }
         }
@@ -114,8 +115,8 @@ export function domPatch(container, html, hostComponent = null) {
     if (newNode._simpliEvents) {
       oldNode._simpliEvents = oldNode._simpliEvents || {};
       Object.keys(newNode._simpliEvents).forEach(type => {
-        // Even if we are hydrating, we must re-attach events because server HTML doesn't have them
-        if (!oldNode._simpliEvents[type]) {
+        if (oldNode._simpliEvents[type] !== newNode._simpliEvents[type]) {
+           if (oldNode._simpliEvents[type]) oldNode.removeEventListener(type, oldNode._simpliEvents[type]);
            oldNode.addEventListener(type, newNode._simpliEvents[type]);
            oldNode._simpliEvents[type] = newNode._simpliEvents[type];
         }
@@ -127,18 +128,36 @@ export function domPatch(container, html, hostComponent = null) {
         if (oldNode.value !== newNode.value) oldNode.value = newNode.value;
     }
 
-    // Patch children recursively
+    // Patch children recursively with simple keyed reconciliation
     const oldChildren = Array.from(oldNode.childNodes);
     const newChildren = Array.from(newNode.childNodes);
-    const max = Math.max(oldChildren.length, newChildren.length);
     
+    // Key-based mapping
+    const oldKeys = new Map();
+    oldChildren.forEach((child, index) => {
+      const key = child.nodeType === 1 ? child.getAttribute('s-key') : null;
+      if (key) oldKeys.set(key, child);
+    });
+
+    const max = Math.max(oldChildren.length, newChildren.length);
     for (let i = 0; i < max; i++) {
-      if (!oldChildren[i]) {
-        oldNode.appendChild(newChildren[i]);
-      } else if (!newChildren[i]) {
-        oldNode.removeChild(oldChildren[i]);
+      const newNodeChild = newChildren[i];
+      if (!newNodeChild) {
+        if (oldChildren[i]) oldNode.removeChild(oldChildren[i]);
+        continue;
+      }
+
+      const key = newNodeChild.nodeType === 1 ? newNodeChild.getAttribute('s-key') : null;
+      const matchedOldChild = key ? oldKeys.get(key) : oldChildren[i];
+
+      if (!matchedOldChild) {
+        oldNode.insertBefore(newNodeChild, oldChildren[i] || null);
+      } else if (matchedOldChild !== oldChildren[i] && key) {
+        // Simple move
+        oldNode.insertBefore(matchedOldChild, oldChildren[i]);
+        patch(matchedOldChild, newNodeChild);
       } else {
-        patch(oldChildren[i], newChildren[i]);
+        patch(matchedOldChild, newNodeChild);
       }
     }
   }

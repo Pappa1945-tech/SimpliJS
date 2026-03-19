@@ -10,6 +10,8 @@
  * @website https://www.sbtech.co.in
  * @repository https://github.com/Pappa1945-tech/SimpliJS
  */
+import { deepClone } from './utils.js';
+
 let activeEffect = null;
 
 export function effect(fn) {
@@ -118,7 +120,7 @@ reactive.async = function(fn) {
 
 reactive.vault = function(obj, limit = 50) {
   let isTravelling = false;
-  let history = [JSON.parse(JSON.stringify(obj))];
+  let history = [deepClone(obj)];
   let currentIndex = 0;
   let pendingSave = false;
 
@@ -128,8 +130,9 @@ reactive.vault = function(obj, limit = 50) {
     Promise.resolve().then(() => {
       pendingSave = false;
       if (isTravelling) return;
-      const snapshot = JSON.parse(JSON.stringify(obj));
+      const snapshot = deepClone(obj);
       const last = history[currentIndex];
+      // Basic check to avoid redundant history entries
       if (JSON.stringify(last) !== JSON.stringify(snapshot)) {
         history = history.slice(Math.max(0, currentIndex + 1 - limit), currentIndex + 1);
         history.push(snapshot);
@@ -139,15 +142,27 @@ reactive.vault = function(obj, limit = 50) {
   });
 
   function applySnapshot(target, snap) {
-    if (typeof snap !== 'object' || snap === null) return snap;
-    for (const key in snap) {
-      if (typeof snap[key] === 'object' && snap[key] !== null) {
-        if (!target[key]) target[key] = Array.isArray(snap[key]) ? [] : {};
-        applySnapshot(target[key], snap[key]);
-      } else {
-        target[key] = snap[key];
+    if (typeof snap !== 'object' || snap === null) return;
+    
+    // Deletion sync
+    Object.keys(target).forEach(key => {
+      if (key !== 'vault' && !(key in snap)) {
+        delete target[key];
       }
-    }
+    });
+
+    // Update/Add sync
+    Object.keys(snap).forEach(key => {
+      const value = snap[key];
+      if (typeof value === 'object' && value !== null && !(value instanceof Node)) {
+        if (typeof target[key] !== 'object' || target[key] === null) {
+          target[key] = Array.isArray(value) ? [] : {};
+        }
+        applySnapshot(target[key], value);
+      } else {
+        target[key] = value;
+      }
+    });
   }
 
   state.vault = {
@@ -155,7 +170,7 @@ reactive.vault = function(obj, limit = 50) {
       if (currentIndex > 0) {
         isTravelling = true;
         currentIndex--;
-        const snapshot = JSON.parse(JSON.stringify(history[currentIndex]));
+        const snapshot = deepClone(history[currentIndex]);
         applySnapshot(state, snapshot);
         console.log(`⏪ Transferred to state snapshot ${currentIndex}`);
         setTimeout(() => isTravelling = false, 0);
@@ -165,7 +180,7 @@ reactive.vault = function(obj, limit = 50) {
       if (currentIndex < history.length - 1) {
         isTravelling = true;
         currentIndex++;
-        const snapshot = JSON.parse(JSON.stringify(history[currentIndex]));
+        const snapshot = deepClone(history[currentIndex]);
         applySnapshot(state, snapshot);
         console.log(`⏩ Transferred to state snapshot ${currentIndex}`);
         setTimeout(() => isTravelling = false, 0);

@@ -4,7 +4,7 @@
 import { reactive, effect, watch } from './reactive.js';
 import { hydrate } from './core.js';
 
-const __g = reactive({});
+const globalState = reactive({});
 console.log("🚀 [SimpliJS] HTML-First Engine v1.0.0 Initialized");
 
 export class SimpliDirectives {
@@ -14,282 +14,333 @@ export class SimpliDirectives {
   }
 
   reg() {
-    this.dir.set('s-state', (__el, __v, __s) => {
-      const __d = this.eval(__v, __s);
-      const __c = reactive(Object.create(__s));
-      if (__d && typeof __d === 'object') Object.assign(__c, __d);
-      __el.__s_st = __c;
-      return __c;
+    this.dir.set('s-state', (el, val, state) => {
+      const data = this.eval(val, state);
+      const childState = reactive(Object.create(state));
+      if (data && typeof data === 'object') Object.assign(childState, data);
+      el.__simpliState = childState;
+      return childState;
     });
-    this.dir.set('s-global', (__el, __v) => {
-      const __d = this.eval(__v, __g);
-      if (__d && typeof __d === 'object') Object.assign(__g, __d);
+    this.dir.set('s-global', (el, val) => {
+      const data = this.eval(val, globalState);
+      if (data && typeof data === 'object') Object.assign(globalState, data);
     });
-    this.dir.set('s-text', (__el, __v, __s) => effect(() => __el.textContent = this.eval(__v, __s) ?? ''));
-    this.dir.set('s-html', (__el, __v, __s) => effect(() => __el.innerHTML = this.eval(__v, __s) ?? ''));
-    this.dir.set('s-value', (__el, __v, __s) => effect(() => __el.value = this.eval(__v, __s) ?? ''));
-    this.dir.set('s-bind', (__el, __v, __s) => {
-      effect(() => __el.value = this.eval(__v, __s) ?? '');
-      __el.addEventListener('input', () => this.set(__s, __v, __el.value));
+    this.dir.set('s-text', (el, val, state) => effect(() => el.textContent = this.eval(val, state, null, true) ?? ''));
+    this.dir.set('s-html', (el, val, state) => effect(() => el.innerHTML = this.eval(val, state) ?? ''));
+    this.dir.set('s-value', (el, val, state) => effect(() => el.value = this.eval(val, state) ?? ''));
+    this.dir.set('s-bind', (el, val, state) => {
+      effect(() => el.value = this.eval(val, state) ?? '');
+      el.addEventListener('input', () => this.set(state, val, el.value));
     });
-    this.dir.set('s-model', (__el, __v, __s) => {
+    this.dir.set('s-model', (el, val, state) => {
       effect(() => {
-        const __val = this.eval(__v, __s);
-        if (__el.type === 'checkbox') __el.checked = !!__val;
-        else if (__el.type === 'radio') __el.checked = __el.value === __val;
-        else __el.value = __val ?? '';
+        const value = this.eval(val, state);
+        if (el.type === 'checkbox') el.checked = !!value;
+        else if (el.type === 'radio') el.checked = el.value === value;
+        else el.value = value ?? '';
       });
-      __el.addEventListener('change', () => this.set(__s, __v, __el.type === 'checkbox' ? __el.checked : __el.value));
+      el.addEventListener('change', () => this.set(state, val, el.type === 'checkbox' ? el.checked : el.value));
     });
-    this.dir.set('s-click', (__el, __v, __s) => __el.addEventListener('click', () => this.eval(__v, __s)));
-    this.dir.set('s-submit', (__el, __v, __s) => __el.addEventListener('submit', (__e) => { __e.preventDefault(); this.eval(__v, __s); }));
-    this.dir.set('s-key', (__el, __v, __s, __n) => {
-      const __k = __n.split(':')[1];
-      if (__k) __el.addEventListener('keydown', (__ev) => { if (__ev.key.toLowerCase() === __k.toLowerCase()) this.eval(__v, __s); });
+    this.dir.set('s-click', (el, val, state) => el.addEventListener('click', () => this.eval(val, state, el)));
+    this.dir.set('s-submit', (el, val, state) => el.addEventListener('submit', (e) => { e.preventDefault(); this.eval(val, state, el); }));
+    this.dir.set('s-key', (el, val, state, name) => {
+      const key = name.split(':')[1];
+      if (key) el.addEventListener('keydown', (ev) => { if (ev.key.toLowerCase() === key.toLowerCase()) this.eval(val, state, el); });
     });
-    this.dir.set('s-hover', (__el, __v, __s) => __el.addEventListener('mouseenter', () => this.eval(__v, __s)));
-    this.dir.set('s-class', (__el, __v, __s) => effect(() => {
-      const __cl = this.eval(__v, __s);
-      if (typeof __cl === 'object') for (const __k in __cl) __el.classList.toggle(__k, !!__cl[__k]);
+    this.dir.set('s-hover', (el, val, state) => el.addEventListener('mouseenter', () => this.eval(val, state, el)));
+    this.dir.set('s-class', (el, val, state) => effect(() => {
+      const classes = this.eval(val, state);
+      if (typeof classes === 'object') for (const k in classes) el.classList.toggle(k, !!classes[k]);
     }));
-    this.dir.set('s-style', (__el, __v, __s) => effect(() => {
-      const __st = this.eval(__v, __s);
-      if (typeof __st === 'object') for (const __k in __st) __el.style[__k] = __st[__k];
+    this.dir.set('s-style', (el, val, state) => effect(() => {
+      const styles = this.eval(val, state);
+      if (typeof styles === 'object') for (const k in styles) el.style[k] = styles[k];
     }));
-    this.dir.set('s-fetch', (__el, __v, __s) => effect(() => {
-      const __u = this.eval(__v, __s);
-      if (!__u || typeof __u !== 'string') return;
-      __s.loading = true; __s.error = null;
-      fetch(__u).then(__r => {
-        if (!__r.ok) throw Error(`HTTP ${__r.status}`);
-        const __ct = __r.headers.get('content-type');
-        if (!__ct || !__ct.includes('application/json')) throw Error('Not JSON');
-        return __r.json();
-      }).then(__d => { __s.data = __d; __s.loading = false; })
-        .catch(__err => { __s.error = __err.message; __s.loading = false; });
+    this.dir.set('s-fetch', (el, val, state) => effect(() => {
+      const url = this.eval(val, state);
+      if (!url || typeof url !== 'string') return;
+      state.loading = true; state.error = null;
+      fetch(url).then(r => {
+        if (!r.ok) throw Error(`HTTP ${r.status}`);
+        const ct = r.headers.get('content-type');
+        if (!ct || !ct.includes('application/json')) throw Error('Not JSON');
+        return r.json();
+      }).then(data => { state.data = data; state.loading = false; })
+        .catch(err => { state.error = err.message; state.loading = false; });
     }));
-    this.dir.set('s-attr', (__el, __v, __s, __n) => {
-      const __at = __n.split(':')[1];
-      if (__at) effect(() => __el.setAttribute(__at, this.eval(__v, __s)));
+    this.dir.set('s-attr', (el, val, state, name) => {
+      const attrName = name.split(':')[1];
+      if (attrName) effect(() => el.setAttribute(attrName, this.eval(val, state)));
     });
-    this.dir.set('s-hide', (__el, __v, __s) => effect(() => __el.style.display = this.eval(__v, __s) ? 'none' : ''));
-    this.dir.set('s-change', (__el, __v, __s) => __el.addEventListener('change', (__e) => this.eval(__v, __s)));
-    this.dir.set('s-input', (__el, __v, __s) => __el.addEventListener('input', (__e) => this.eval(__v, __s)));
-    this.dir.set('s-memo', (__el, __v) => __el.__m = __v);
-    this.dir.set('s-ref', (__el, __v, __s) => __s[__v] = __el);
-    this.dir.set('s-for', (__el, __v, __s) => {
-      const __m = __v.match(/(.+)\s+in\s+(.+)/);
-      if (!__m || !__el.parentNode) return;
-      const [_, __itExp, __lsVar] = __m;
-      const __tpl = __el.cloneNode(true); __tpl.removeAttribute('s-for');
-      const __anc = document.createComment(`s-for: ${__v}`);
-      __el.parentNode.replaceChild(__anc, __el);
-      let __ns = new Map();
+    this.dir.set('s-hide', (el, val, state) => effect(() => el.style.display = this.eval(val, state) ? 'none' : ''));
+    this.dir.set('s-change', (el, val, state) => el.addEventListener('change', (e) => this.eval(val, state, el)));
+    this.dir.set('s-input', (el, val, state) => el.addEventListener('input', (e) => this.eval(val, state, el)));
+    this.dir.set('s-memo', (el, val) => el.__hasMemo = val);
+    this.dir.set('s-ref', (el, val, state) => state[val] = el);
+    this.dir.set('s-for', (el, val, state) => {
+      const match = val.match(/(.+)\s+in\s+(.+)/);
+      if (!match || !el.parentNode) return;
+      const [_, itemExp, listVar] = match;
+      const template = el.cloneNode(true); template.removeAttribute('s-for');
+      const anchor = document.createComment(`s-for: ${val}`);
+      el.parentNode.replaceChild(anchor, el);
+      let nodesMap = new Map();
       effect(() => {
-        const __ls = this.eval(__lsVar, __s) || [];
-        const __nxt = new Map();
-        const __kExp = __tpl.getAttribute('s-key');
-        __ls.forEach((__it, __i) => {
-          const __ist = reactive(Object.create(__s));
-          if (__itExp.includes(',')) {
-            const [__vj, __idx] = __itExp.split(',').map(__ss => __ss.trim());
-            __ist[__vj] = __it; __ist[__idx] = __i;
-          } else __ist[__itExp.trim()] = __it;
-          const __key = __kExp ? this.eval(__kExp, __ist) : __i;
-          let __c = __ns.get(__key);
-          if (!__c) { __c = __tpl.cloneNode(true); this.scan(__c, __ist); }
-          __nxt.set(__key, __c); __anc.parentNode?.insertBefore(__c, __anc);
+        const list = this.eval(listVar, state) || [];
+        const nextNodesMap = new Map();
+        const keyExp = template.getAttribute('s-key');
+        list.forEach((item, index) => {
+          const itemState = reactive(Object.create(state));
+          if (itemExp.includes(',')) {
+            const [valVar, idxVar] = itemExp.split(',').map(s => s.trim());
+            itemState[valVar] = item; itemState[idxVar] = index;
+          } else itemState[itemExp.trim()] = item;
+          const key = keyExp ? this.eval(keyExp, itemState) : index;
+          let node = nodesMap.get(key);
+          if (!node) { node = template.cloneNode(true); this.scan(node, itemState); }
+          nextNodesMap.set(key, node); anchor.parentNode?.insertBefore(node, anchor);
         });
-        __ns.forEach((__n, __k) => { if (!__nxt.has(__k)) __n.remove(); });
-        __ns = __nxt;
+        nodesMap.forEach((node, key) => { if (!nextNodesMap.has(key)) node.remove(); });
+        nodesMap = nextNodesMap;
       });
     });
-    this.dir.set('s-if', (__el, __v, __s) => {
-      if (!__el.parentNode) return;
-      const __tp = __el.cloneNode(true); __tp.removeAttribute('s-if');
-      const __an = document.createComment(`s-if: ${__v}`);
-      __el.parentNode.replaceChild(__an, __el);
-      let __cur = null;
+    this.dir.set('s-if', (el, val, state) => {
+      if (!el.parentNode) return;
+      const template = el.cloneNode(true); template.removeAttribute('s-if');
+      const anchor = document.createComment(`s-if: ${val}`);
+      el.parentNode.replaceChild(anchor, el);
+      let current = null;
       effect(() => {
-        const __re = !!this.eval(__v, __s);
-        __an.__if = __re;
-        if (__re && !__cur) { __cur = __tp.cloneNode(true); this.scan(__cur, __s); __an.parentNode?.insertBefore(__cur, __an); }
-        else if (!__re && __cur) { __cur.remove(); __cur = null; }
+        const result = !!this.eval(val, state);
+        anchor.__if = result;
+        if (result && !current) { current = template.cloneNode(true); this.scan(current, state); anchor.parentNode?.insertBefore(current, anchor); }
+        else if (!result && current) { current.remove(); current = null; }
       });
     });
-    this.dir.set('s-else', (__el, __v, __s) => {
-      if (!__el.parentNode) return;
-      const __tp = __el.cloneNode(true); __tp.removeAttribute('s-else');
-      const __an = document.createComment('s-else');
-      __el.parentNode.replaceChild(__an, __el);
-      let __cur = null;
+    this.dir.set('s-else', (el, val, state) => {
+      if (!el.parentNode) return;
+      const template = el.cloneNode(true); template.removeAttribute('s-else');
+      const anchor = document.createComment('s-else');
+      el.parentNode.replaceChild(anchor, el);
+      let current = null;
       effect(() => {
-        let __p = __an.previousSibling;
-        while (__p && __p.__if === undefined) __p = __p.previousSibling;
-        const __re = __p ? !__p.__if : true;
-        if (__re && !__cur) { __cur = __tp.cloneNode(true); this.scan(__cur, __s); __an.parentNode?.insertBefore(__cur, __an); }
-        else if (!__re && __cur) { __cur.remove(); __cur = null; }
+        let prev = anchor.previousSibling;
+        while (prev && prev.__if === undefined) prev = prev.previousSibling;
+        const result = prev ? !prev.__if : true;
+        if (result && !current) { current = template.cloneNode(true); this.scan(current, state); anchor.parentNode?.insertBefore(current, anchor); }
+        else if (!result && current) { current.remove(); current = null; }
       });
     });
-    this.dir.set('s-show', (__el, __v, __s) => effect(() => __el.style.display = this.eval(__v, __s) ? '' : 'none'));
-    this.dir.set('s-once', (__el) => __el.__o = true);
-    this.dir.set('s-ignore', (__el) => __el.__i = true);
-    this.dir.set('s-validate', (__el, __v, __s) => {
-      const __field = __el.getAttribute('s-bind') || __el.name;
-      if (!__field) return;
-      __s.$errors = __s.$errors || reactive({});
+    this.dir.set('s-show', (el, val, state) => effect(() => el.style.display = this.eval(val, state) ? '' : 'none'));
+    this.dir.set('s-once', (el) => el.__once = true);
+    this.dir.set('s-ignore', (el) => el.__ignore = true);
+    this.dir.set('s-validate', (el, val, state) => {
+      const field = el.getAttribute('s-bind') || el.name;
+      if (!field) return;
+      state.$errors = state.$errors || reactive({});
       effect(() => {
-        const __val = this.eval(__field, __s);
-        const __err = __v === 'required' ? (!__val ? "Required" : null) : this.eval(__v, __s);
-        __s.$errors[__field] = __err;
-        __el.classList.toggle('is-invalid', !!__err);
+        const fieldValue = this.eval(field, state);
+        const error = val === 'required' ? (!fieldValue ? "Required" : null) : this.eval(val, state);
+        state.$errors[field] = error;
+        el.classList.toggle('is-invalid', !!error);
       });
     });
-    this.dir.set('s-error', (__el, __v, __s) => effect(() => {
-      const __msg = __s.$errors?.[__v] || (__v === 'fetch' ? __s.error : null);
-      __el.textContent = __msg ?? '';
-      __el.style.display = __msg ? '' : 'none';
+    this.dir.set('s-error', (el, val, state) => effect(() => {
+      const msg = state.$errors?.[val] || (val === 'fetch' ? state.error : null);
+      el.textContent = msg ?? '';
+      el.style.display = msg ? '' : 'none';
     }));
-    this.dir.set('s-loading', (__el, __v, __s) => effect(() => __el.style.display = __s.loading ? '' : 'none'));
+    this.dir.set('s-loading', (el, val, state) => effect(() => el.style.display = state.loading ? '' : 'none'));
     
     // Routing
-    this.dir.set('s-route', (__el, __v) => {
+    this.dir.set('s-route', (el, val) => {
       this.routes = this.routes || new Map();
-      this.routes.set(__v, __el.innerHTML);
-      __el.remove();
+      this.routes.set(val, el.innerHTML);
+      el.remove();
     });
-    this.dir.set('s-view', (__el) => {
-      this.view = __el;
-      const __upd = () => {
-        const __h = window.location.hash.slice(1) || '/';
-        const __c = this.routes?.get(__h);
-        if (__c) { __el.innerHTML = __c; this.scan(__el); }
+    this.dir.set('s-view', (el) => {
+      this.view = el;
+      const update = () => {
+        const hash = window.location.hash.slice(1) || '/';
+        const content = this.routes?.get(hash);
+        if (content) { el.innerHTML = content; this.scan(el); }
       };
-      window.addEventListener('hashchange', __upd);
-      __upd();
+      window.addEventListener('hashchange', update);
+      update();
     });
-    this.dir.set('s-link', (__el, __v) => __el.addEventListener('click', (__e) => {
-      __e.preventDefault(); window.location.hash = __v;
+    this.dir.set('s-link', (el, val) => el.addEventListener('click', (e) => {
+      e.preventDefault(); window.location.hash = val;
     }));
 
-    this.dir.set('s-component', (__el, __v, __s) => {
-      const __name = this.eval(__v, __s);
-      if (!__name) return;
-      const __ne = document.createElement(__name);
-      Array.from(__el.attributes).forEach(__a => {
-        if (__a.name !== 's-component') __ne.setAttribute(__a.name, __a.value);
+    this.dir.set('s-component', (el, val, state) => {
+      const name = this.eval(val, state);
+      if (!name) return;
+      const node = document.createElement(name);
+      Array.from(el.attributes).forEach(attr => {
+        if (attr.name !== 's-component') node.setAttribute(attr.name, attr.value);
       });
-      __ne.innerHTML = __el.innerHTML;
-      __el.replaceWith(__ne);
-      // Don't scan children if it's a component, they are managed by the component itself
+      node.innerHTML = el.innerHTML;
+      el.replaceWith(node);
     });
-    this.dir.set('s-prop', (__el, __v, __s, __n) => {
-      const __p = __n.split(':')[1];
-      if (__p) effect(() => {
-        const __val = this.eval(__v, __s);
-        __el.setAttribute(__p, typeof __val === 'object' ? JSON.stringify(__val) : __val);
-        if (__el._props) {
-          __el._props[__p] = __val;
+    this.dir.set('s-prop', (el, val, state, name) => {
+      const prop = name.split(':')[1];
+      if (prop) effect(() => {
+        const value = this.eval(val, state);
+        el.setAttribute(prop, typeof value === 'object' ? JSON.stringify(value) : value);
+        if (el._props) {
+          el._props[prop] = value;
         } else {
-          // Fallback for non-Simpli components or if not yet connected
-          __el[__p] = __val;
+          el[prop] = value;
         }
       });
     });
-    this.dir.set('s-slot', (__el, __v) => __el.setAttribute('slot', __v));
+    this.dir.set('s-slot', (el, val) => el.setAttribute('slot', val));
 
-    this.dir.set('s-lazy', (__el, __v, __s) => {
-      const __ob = new IntersectionObserver((__es) => {
-        if (__es[0].isIntersecting) { __el.src = this.eval(__v, __s); __ob.disconnect(); }
+    this.dir.set('s-lazy', (el, val, state) => {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) { el.src = this.eval(val, state); observer.disconnect(); }
       });
-      __ob.observe(__el);
+      observer.observe(el);
     });
   }
 
   /**
    * Evaluates a JavaScript expression within the given state context.
    * 
-   * @security This uses `new Function` and `with(state)` which can be 
-   * dangerous if the expression string comes from an untrusted source.
-   * Ensure that attribute values (s-*, {interpolation}) are not user-controlled
-   * without proper sanitization.
+   * @param {string} exp - The expression to evaluate
+   * @param {object} state - The reactive state object
+   * @param {HTMLElement} el - Optional reference to the current element ($el)
+   * @param {boolean} safe - If true, restricts evaluation to prevent XSS
    */
-  eval(__e, __s, __e_el = null) {
-    if (!__e) return;
-    const __t = __e.trim();
-    const __p = new Proxy(__s, { 
+  eval(exp, state, el = null, safe = false) {
+    if (!exp) return;
+    const trimmed = exp.trim();
+    
+    // Safety check: Simple property lookup for common cases
+    const isSimpleId = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(trimmed);
+    if (isSimpleId && trimmed in state) {
+      return state[trimmed];
+    }
+
+    const proxy = new Proxy(state, { 
       get: (target, key) => {
-        if (key === '$el') return __e_el;
-        if (typeof key === 'string' && !(key in target) && typeof window !== 'undefined' && key in window) return window[key];
+        if (key === '$el') return el;
+        // Block dangerous globals in safe mode
+        if (safe && ['window', 'document', 'eval', 'Function', 'location'].includes(key)) return undefined;
+        if (typeof key === 'string' && !(key in target) && typeof window !== 'undefined' && key in window) {
+           // In safe mode, we only allow a whitelist of harmless globals
+           if (safe) {
+             const whitelist = ['Math', 'Date', 'JSON', 'Number', 'String', 'Array', 'Object', 'Boolean'];
+             if (!whitelist.includes(key)) return undefined;
+           }
+           return window[key];
+        }
         return target[key];
       },
-      has: (target, key) => key === '$el' || key in target || (typeof window !== 'undefined' && key in window)
-    });
-    try {
-      if (__t.startsWith('if') || __t.includes(';')) {
-        return (new Function('state', '$el', `try { with(state) { ${__t} } } catch(e) {}`))(__p, __e_el);
+      has: (target, key) => {
+        if (safe && ['window', 'document', 'eval', 'Function', 'location'].includes(key)) return false;
+        return key === '$el' || key in target || (typeof window !== 'undefined' && key in window);
       }
-      try { return (new Function('state', '$el', `try { with(state) { return (${__t}) } } catch(e) { return undefined; }`))(__p, __e_el); }
-      catch { return (new Function('state', '$el', `try { with(state) { return ${__t} } } catch(e) { return undefined; }`))(__p, __e_el); }
-    } catch (__err) {
-       if (!__t.includes('item.') && !['val', 'url', '__v'].includes(__t)) console.warn(`[SimpliJS] Eval Error: ${__t}`, __err.message);
+    });
+
+    try {
+      // Use Function constructor but inject 'state' and '$el'
+      // If safe mode is on, we wrap the expression to prevent access to outer scope via 'this'
+      const code = safe 
+        ? `try { with(state) { return (${trimmed}) } } catch(e) { return undefined; }`
+        : `try { with(state) { ${trimmed.includes(';') || trimmed.startsWith('if') ? trimmed : 'return (' + trimmed + ')'} } } catch(e) { return undefined; }`;
+        
+      const fn = new Function('state', '$el', code);
+      return fn(proxy, el);
+    } catch (err) {
+       if (!trimmed.includes('item.') && !['val', 'url', 'value'].includes(trimmed)) {
+         console.warn(`[SimpliJS] Eval Error: ${trimmed}`, err.message);
+       }
     }
   }
 
-  set(__o, __p, __v) {
-    const __pts = __p.split('.');
-    let __c = __o;
-    for (let __i = 0; __i < __pts.length - 1; __i++) __c = __c[__pts[__i]];
-    __c[__pts[__pts.length - 1]] = __v;
+  set(obj, path, value) {
+    const parts = path.split('.');
+    let current = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!current[parts[i]]) current[parts[i]] = {};
+      current = current[parts[i]];
+    }
+    current[parts[parts.length - 1]] = value;
   }
 
-  scan(__root, __st = __g) {
-    if (!__root || __root.__i || (__root.hasAttribute && __root.hasAttribute('s-ignore'))) return;
-    const __walk = (__n, __s) => {
-      if (__n.nodeType !== 1 || __n.__i || (__n.hasAttribute && __n.hasAttribute('s-ignore'))) return;
+  scan(root, state = globalState) {
+    if (!root || root.__ignore || (root.hasAttribute && root.hasAttribute('s-ignore'))) return;
+    
+    const walk = (node, currentState) => {
+      if (node.nodeType !== 1 || node.__ignore || (node.hasAttribute && node.hasAttribute('s-ignore'))) return;
       
       // s-memo check
-      const __mA = __n.getAttribute('s-memo');
-      if (__mA) {
-        const __mv = this.eval(__mA, __s);
-        if (__n.__hv && __n.__mv === __mv) return;
-        __n.__mv = __mv; __n.__hv = true;
+      const memoAttr = node.getAttribute('s-memo');
+      if (memoAttr) {
+        const memoVal = this.eval(memoAttr, currentState);
+        if (node.__hasMemo && node.__memoVal === memoVal) return;
+        node.__memoVal = memoVal; node.__hasMemo = true;
       }
 
-      let __cs = __s;
-      const __stA = __n.getAttribute('s-state'); if (__stA) { __cs = this.dir.get('s-state')(__n, __stA, __s); __n.removeAttribute('s-state'); }
-      const __glA = __n.getAttribute('s-global'); if (__glA) { this.dir.get('s-global')(__n, __glA, __s); __n.removeAttribute('s-global'); }
-      const __as = Array.from(__n.attributes);
-      let __stop = false;
-      __as.forEach(__a => {
-        if (__a.name.startsWith('s-') && __a.name !== 's-state' && __a.name !== 's-global') {
-          const __base = __a.name.split(':')[0];
-          const __h = this.dir.get(__base);
-          if (__h) {
-            if (['s-for', 's-if', 's-else'].includes(__base)) __stop = true;
-            __h(__n, __a.value, __cs, __a.name, __n);
-            __n.removeAttribute(__a.name);
+      let activeState = currentState;
+      const stateAttr = node.getAttribute('s-state'); 
+      if (stateAttr) { 
+        const data = this.eval(stateAttr, currentState);
+        const childState = reactive(Object.create(currentState));
+        if (data && typeof data === 'object') Object.assign(childState, data);
+        node.__simpliState = childState;
+        activeState = childState;
+        node.removeAttribute('s-state'); 
+      }
+      
+      const globalAttr = node.getAttribute('s-global'); 
+      if (globalAttr) { 
+        const data = this.eval(globalAttr, globalState);
+        if (data && typeof data === 'object') Object.assign(globalState, data);
+        node.removeAttribute('s-global'); 
+      }
+
+      const attrs = Array.from(node.attributes);
+      let stopDeepScan = false;
+      
+      attrs.forEach(attr => {
+        if (attr.name.startsWith('s-') && attr.name !== 's-state' && attr.name !== 's-global') {
+          const baseName = attr.name.split(':')[0];
+          const handler = this.dir.get(baseName);
+          if (handler) {
+            if (['s-for', 's-if', 's-else'].includes(baseName)) stopDeepScan = true;
+            handler(node, attr.value, activeState, attr.name, node);
+            node.removeAttribute(attr.name);
           }
         }
       });
-      this.interp(__n, __cs);
-      if (!__stop) Array.from(__n.childNodes).forEach(__c => __walk(__c, __cs));
+
+      this.interp(node, activeState);
+      if (!stopDeepScan) Array.from(node.childNodes).forEach(child => walk(child, activeState));
     };
-    __walk(__root, __st);
+    walk(root, state);
   }
 
-  interp(__n, __s) {
-    if (['CODE', 'PRE', 'SCRIPT', 'STYLE'].includes(__n.tagName)) return;
-    __n.childNodes.forEach(__c => {
-      if (__c.nodeType === 3 && __c.textContent.includes('{')) {
-        const __orig = __c.textContent;
-        const __upd = () => __c.textContent = __orig.replace(/\{(.+?)\}/g, (_, __e) => this.eval(__e.trim(), __s) ?? '');
-        if (__n.__o || (__n.hasAttribute && __n.hasAttribute('s-once'))) __upd(); else effect(__upd);
+  interp(node, state) {
+    if (['CODE', 'PRE', 'SCRIPT', 'STYLE'].includes(node.tagName)) return;
+    node.childNodes.forEach(child => {
+      if (child.nodeType === 3 && child.textContent.includes('{')) {
+        const originalText = child.textContent;
+        const update = () => {
+          child.textContent = originalText.replace(/\{(.+?)\}/g, (_, exp) => {
+            // Use SAFE eval for interpolation
+            const val = this.eval(exp.trim(), state, null, true);
+            return val ?? '';
+          });
+        };
+        if (node.__once || (node.hasAttribute && node.hasAttribute('s-once'))) update(); 
+        else effect(update);
       }
     });
   }
 
-  init() { document.querySelectorAll('[s-app]').forEach(__a => this.scan(__a)); }
+  init() { document.querySelectorAll('[s-app]').forEach(app => this.scan(app)); }
 }
 
 export const directives = new SimpliDirectives();

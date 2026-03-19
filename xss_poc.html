@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS XSS POC</title>
+</head>
+<body>
+    <div s-app s-state="{ name: 'User', bio: 'Expert' }">
+        <h1>Hello, {name}</h1>
+        <p>Bio: <span s-text="bio"></span></p>
+        
+        <hr>
+        <h3>Attack Vector 1: Interpolation</h3>
+        <p>Imagine 'name' comes from <code>?name=}{alert('XSS_Interpolation')}{</code></p>
+        <button id="btn1">Trigger Interpolation XSS</button>
+
+        <h3>Attack Vector 2: s-text</h3>
+        <p>Imagine 'bio' comes from <code>?bio=alert('XSS_s-text')</code></p>
+        <button id="btn2">Trigger s-text XSS</button>
+    </div>
+
+    <script type="module">
+        import { directives } from './dist/simplijs.js';
+        
+        // Initialize SimpliJS
+        directives.init();
+
+        // Simulate malicious data entry
+        document.getElementById('btn1').onclick = () => {
+            // In a real app, this value might come from a URL param or database
+            // that the developer blindly assigns to a reactive state.
+            const app = document.querySelector('[s-app]');
+            app.__s_st.name = "}{alert('XSS via Interpolation')}{";
+        };
+
+        document.getElementById('btn2').onclick = () => {
+            const app = document.querySelector('[s-app]');
+            app.__s_st.bio = "alert('XSS via s-text')";
+        };
+    </script>
+</body>
+</html>

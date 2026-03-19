@@ -25,11 +25,7 @@
   "bugs": {
     "url": "https://github.com/Pappa1945-tech/SimpliJS/issues"
   },
-  "author": {
-    "name": "Subhamoy Bhattacharjee",
-    "email": "support@sbtech.co.in",
-    "url": "https://sbtech.co.in"
-  },
+  "author": "Subhamoy Bhattacharjee <support@sbtech.co.in> (https://sbtech.co.in)",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/simplijs.js",
@@ -71,5 +67,10 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/Pappa1945-tech"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
   }
 }
