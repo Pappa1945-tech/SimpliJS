@@ -51,8 +51,10 @@ export function reactive(obj, onSet = null) {
         }
         deps.add(activeEffect);
       }
-      const res = Reflect.get(target, key);
-      return typeof res === 'object' ? reactive(res, onSet) : res;
+            const res = Reflect.get(target, key, receiver);
+            if (typeof res === 'function') return res.bind(target);
+            return (typeof res === 'object' && res !== null) ? reactive(res, onSet) : res;
+      
     },
     set(target, key, value) {
       const result = Reflect.set(target, key, value);
