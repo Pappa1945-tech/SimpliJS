@@ -1,3 +1,4 @@
+<meta name="google-site-verification" content="QVwJj9L1nEQwFnWb19guj0a9p1egBAz-QZ3LVmNWqvg" />
 # SimpliJS 🚀
 
 <p align="center">
