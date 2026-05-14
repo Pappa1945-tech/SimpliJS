@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS | Premium Analytics Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for the demo -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --sidebar-w: 260px;
+            --glass: rgba(255, 255, 255, 0.7);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        aside {
+            width: var(--sidebar-w);
+            background: #0f172a;
+            color: white;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 700; margin-bottom: 3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .logo span { color: var(--primary); }
+
+        nav ul { list-style: none; }
+        nav li { margin-bottom: 0.5rem; }
+        nav a { 
+            color: #94a3b8; text-decoration: none; padding: 0.75rem 1rem; border-radius: 0.5rem; display: block;
+            transition: all 0.2s;
+        }
+        nav a:hover, nav a.active { background: rgba(255,255,255,0.1); color: white; }
+
+        /* Main Content */
+        main { flex: 1; padding: 2rem; overflow-y: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .user-profile { display: flex; align-items: center; gap: 1rem; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+
+        /* Dashboard Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: var(--bg-card); padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .card-title { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .card-value { font-size: 1.5rem; font-weight: 700; }
+        .card-trend { font-size: 0.75rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; }
+        .trend-up { color: #10b981; }
+
+        .chart-container { background: var(--bg-card); padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+
+        /* Interactive Elements */
+        button { cursor: pointer; border: none; outline: none; }
+        .btn-primary { background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: background 0.2s; }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            aside { position: fixed; left: -100%; z-index: 100; height: 100%; }
+            aside.open { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body s-app s-state="{ 
+    user: 'Subhamoy',
+    stats: [
+        { title: 'Total Revenue', value: '$45,231', trend: '+12.5%', icon: '💰' },
+        { title: 'Active Users', value: '2,405', trend: '+18.2%', icon: '👥' },
+        { title: 'Page Views', value: '145k', trend: '+5.4%', icon: '📊' },
+        { title: 'Conversion', value: '3.2%', trend: '-1.1%', icon: '📈' }
+    ],
+    isSidebarOpen: false
+}">
+
+    <!-- Sidebar -->
+    <aside s-class="{ open: isSidebarOpen }">
+        <div class="logo">Simpli<span>JS</span></div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Overview</a></li>
+                <li><a href="#">Analytics</a></li>
+                <li><a href="#">Customers</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <header>
+            <div>
+                <h1 style="font-size: 1.875rem;">Welcome back, {user}!</h1>
+                <p style="color: var(--text-muted);">Here's what's happening today.</p>
+            </div>
+            <div class="user-profile">
+                <button class="btn-primary" s-click="user = prompt('Update name:', user) || user">Edit Name</button>
+                <div class="avatar">{user[0]}</div>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid">
+            <div s-for="stat in stats" class="card">
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <div class="card-title">{stat.title}</div>
+                        <div class="card-value">{stat.value}</div>
+                        <div class="card-trend" s-class="{ 'trend-up': stat.trend.startsWith('+') }">
+                            {stat.trend} from last month
+                        </div>
+                    </div>
+                    <div style="font-size: 1.5rem;">{stat.icon}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-container">
+            <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Traffic Insights</h2>
+            <canvas id="mainChart" style="max-height: 300px;"></canvas>
+        </div>
+
+        <!-- Dynamic List -->
+        <div class="card">
+            <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Recent Activities</h2>
+            <div s-state="{ activities: ['Logged in', 'Updated profile', 'Downloaded report'] }">
+                <ul style="list-style: none;">
+                    <li s-for="act in activities" style="padding: 1rem 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                        <span>{act}</span>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">Just now</span>
+                    </li>
+                </ul>
+                <button style="margin-top: 1rem; color: var(--primary); font-weight: 600;" s-click="activities.push('New Action ' + (activities.length + 1))">+ Add Mock Activity</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- SimpliJS Core -->
+    <script type="module">
+        // Using local path for repo consistency. 
+        // In production, use: https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.1/dist/simplijs.min.js
+        import { directives } from '../packages/simplijs/src/index.js';
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Page Views',
+                    data: [12, 19, 3, 5, 2, 3, 10],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    </script>
+</body>
+</html>

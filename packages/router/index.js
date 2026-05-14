@@ -79,6 +79,15 @@ export function createRouter(routes, options = {}) {
     }
 
     if (route) {
+      // Support for Guards
+      if (route.guard && typeof route.guard === 'function') {
+        const canAccess = await route.guard(params);
+        if (canAccess === false) {
+          console.warn(`🛡️ [SimpliJS Router]: Access denied to ${path}`);
+          return; // Block navigation
+        }
+      }
+
       // Support for Loaders
       if (route.loader && typeof route.loader === 'function') {
          await route.loader();

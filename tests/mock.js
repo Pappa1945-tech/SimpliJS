@@ -52,6 +52,21 @@ global.document = {
       closest: function(selector) {
         if (selector === '[data-hydrating]' && this.hasAttribute('data-hydrating')) return this;
         return null;
+      },
+      addEventListener: function(name, cb) {
+        this._listeners = this._listeners || {};
+        this._listeners[name] = this._listeners[name] || [];
+        this._listeners[name].push(cb);
+      },
+      removeEventListener: function(name, cb) {
+        if (this._listeners && this._listeners[name]) {
+          this._listeners[name] = this._listeners[name].filter(c => c !== cb);
+        }
+      },
+      dispatchEvent: function(event) {
+        if (this._listeners && this._listeners[event.type]) {
+          this._listeners[event.type].forEach(cb => cb(event));
+        }
       }
     };
     if (tag.toLowerCase() === 'template') {

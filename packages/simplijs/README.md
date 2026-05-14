@@ -150,7 +150,7 @@ Start coding immediately without any installation by importing from a CDN.
 
 ```html
 <script type="module">
-  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.0/dist/simplijs.min.js';
+  import { createApp, component, reactive } from 'https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.1/dist/simplijs.min.js';
   
   // Start coding immediately!
 </script>
@@ -159,7 +159,7 @@ Start coding immediately without any installation by importing from a CDN.
 ### 3. Local Download (Manual Setup)
 Download the minified source directly and include it in your project folder. This is perfect for offline development or when you want full control over the source.
 
-1.  Download [simplijs.min.js](https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.0/dist/simplijs.min.js).
+1.  Download [simplijs.min.js](https://cdn.jsdelivr.net/gh/Pappa1945-tech/simplijs@v3.2.1/dist/simplijs.min.js).
 2.  Include it in your HTML:
 
 ```html

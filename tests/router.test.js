@@ -1,5 +1,6 @@
 // tests/router.test.js
 import { createRouter } from '../packages/simplijs/src/router.js';
+import assert from 'assert';
 
 console.log('Testing Router Params...');
 
@@ -41,6 +42,25 @@ async function testRoute(path, expectedParams) {
 async function run() {
     await testRoute('/user/123', { id: '123' });
     await testRoute('/post/tech/simplijs', { category: 'tech', id: 'simplijs' });
+    
+    // Test Guard
+    console.log('Testing Router Guards...');
+    let guardExecuted = false;
+    const guardedRoutes = {
+        '/admin': {
+            component: () => 'Admin',
+            guard: () => { guardExecuted = true; return false; } // Block access
+        }
+    };
+    const guardedRouter = createRouter(guardedRoutes, { root: document.createElement('div'), mode: 'hash' });
+    
+    window.location.hash = '#/admin';
+    window.dispatchEvent(new Event('hashchange'));
+    await new Promise(r => setTimeout(r, 10));
+    
+    assert.strictEqual(guardExecuted, true, 'Guard should have been executed');
+    console.log('  - Router Guards: OK');
+
     console.log('  - Router Params: OK');
 }
 

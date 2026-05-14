@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS | Modern Blog Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --text-dark: #111827;
+            --text-light: #4b5563;
+            --bg-page: #ffffff;
+            --accent: #f3f4f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; color: var(--text-light); }
+
+        /* Reading Progress */
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 4px; background: var(--primary); width: 0%; z-index: 1000;
+            transition: width 0.1s ease-out;
+        }
+
+        .container { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem; }
+
+        header { margin-bottom: 3rem; text-align: center; }
+        h1 { font-size: 2.5rem; color: var(--text-dark); margin-bottom: 1rem; line-height: 1.2; }
+        .meta { font-size: 0.875rem; color: var(--text-light); display: flex; justify-content: center; gap: 1rem; }
+
+        article img { width: 100%; border-radius: 1rem; margin: 2rem 0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        article p { margin-bottom: 1.5rem; font-size: 1.125rem; }
+
+        /* Comments Section */
+        .comments-section { margin-top: 5rem; padding-top: 3rem; border-top: 1px solid var(--accent); }
+        .comment-form { margin-bottom: 2rem; background: var(--accent); padding: 1.5rem; border-radius: 0.75rem; }
+        textarea { width: 100%; padding: 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; resize: none; margin-bottom: 1rem; font-family: inherit; }
+        button { background: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; }
+
+        .comment-list { list-style: none; }
+        .comment-item { margin-bottom: 1.5rem; display: flex; gap: 1rem; }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-dark); }
+        .comment-body { background: white; border: 1px solid var(--accent); padding: 1rem; border-radius: 0.5rem; flex: 1; }
+        .comment-author { font-weight: 600; color: var(--text-dark); margin-bottom: 0.25rem; }
+    </style>
+</head>
+<body s-app s-state="{ 
+    progress: 0,
+    newComment: '',
+    comments: [
+        { author: 'Jane Doe', text: 'This is a fantastic framework! So lightweight.', initial: 'JD' },
+        { author: 'John Smith', text: 'Love the HTML-first approach. Finally!', initial: 'JS' }
+    ]
+}" s-init="window.onscroll = () => { 
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    progress = (winScroll / height) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+}">
+
+    <div id="progress-bar"></div>
+
+    <div class="container">
+        <header>
+            <h1>The Rise of the Anti-Build Movement in Web Development</h1>
+            <div class="meta">
+                <span>By SimpliJS Team</span>
+                <span>•</span>
+                <span>May 14, 2026</span>
+                <span>•</span>
+                <span>5 min read</span>
+            </div>
+        </header>
+
+        <article>
+            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1200" alt="Code on screen">
+            
+            <p>Web development has reached a tipping point. Every year, our toolchains grow heavier, our configurations more complex, and our build times longer. We spend more time fixing Vite configs than writing features.</p>
+            
+            <p><strong>SimpliJS</strong> represents a different path. We believe that the browser is now capable enough to handle reactivity, routing, and component management natively without needing a 100MB <code>node_modules</code> folder for a simple landing page.</p>
+
+            <p>By leveraging native ES Modules, Proxies, and Custom Elements, we can return to the simplicity of "Save and Refresh" while keeping the power of modern reactive frameworks.</p>
+
+            <h2 style="color: var(--text-dark); margin: 2rem 0 1rem;">Why HTML-First Matters</h2>
+            <p>Directives like <code>s-app</code> and <code>s-state</code> allow developers to express logic where it belongs: in the markup. It reduces cognitive load and makes the web accessible again to those who don't want to learn a DSL just to build a button.</p>
+        </article>
+
+        <section class="comments-section">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-dark);">Comments ({comments.length})</h3>
+            
+            <div class="comment-form">
+                <textarea s-bind="newComment" placeholder="Write a comment..." rows="3"></textarea>
+                <button s-click="if(newComment.trim()) { comments.push({ author: 'You', text: newComment, initial: 'Y' }); newComment = ''; }">Post Comment</button>
+            </div>
+
+            <ul class="comment-list">
+                <li s-for="comment in comments" class="comment-item">
+                    <div class="comment-avatar">{comment.initial}</div>
+                    <div class="comment-body">
+                        <div class="comment-author">{comment.author}</div>
+                        <p style="font-size: 0.95rem;">{comment.text}</p>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <script type="module">
+        import { directives } from '../packages/simplijs/src/index.js';
+    </script>
+</body>
+</html>

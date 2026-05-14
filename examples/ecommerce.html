@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpliJS | E-Commerce Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ec4899;
+            --primary-dark: #db2777;
+            --bg: #fdf2f8;
+            --text: #1f2937;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); }
+
+        nav { background: white; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .cart-trigger { position: relative; cursor: pointer; font-size: 1.25rem; }
+        .cart-count { position: absolute; top: -8px; right: -8px; background: var(--primary); color: white; font-size: 0.65rem; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+        .hero { padding: 4rem 2rem; text-align: center; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; color: #831843; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+        .product-card { background: white; border-radius: 1.5rem; overflow: hidden; transition: transform 0.3s; position: relative; border: 1px solid #f9a8d4; }
+        .product-card:hover { transform: translateY(-10px); }
+        .product-img { height: 240px; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+        .product-info { padding: 1.5rem; }
+        .product-price { color: var(--primary); font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0; }
+        .add-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .add-btn:hover { background: var(--primary-dark); }
+
+        /* Cart Sidebar */
+        .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .cart-overlay.open { opacity: 1; pointer-events: auto; }
+        .cart-panel { position: absolute; right: -400px; top: 0; bottom: 0; width: 400px; background: white; transition: 0.3s; padding: 2rem; display: flex; flex-direction: column; }
+        .cart-overlay.open .cart-panel { right: 0; }
+
+        .cart-items { flex: 1; overflow-y: auto; list-style: none; margin: 1.5rem 0; }
+        .cart-item { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; }
+        .cart-item-img { width: 60px; height: 60px; border-radius: 0.5rem; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .total-box { border-top: 2px dashed #fce7f3; padding-top: 1.5rem; }
+    </style>
+</head>
+<body s-app s-state="{ 
+    isCartOpen: false,
+    cart: [],
+    products: [
+        { id: 1, name: 'Cloud Sneakers', price: 120, emoji: '👟' },
+        { id: 2, name: 'Neon Watch', price: 85, emoji: '⌚' },
+        { id: 3, name: 'Silky Scarf', price: 45, emoji: '🧣' },
+        { id: 4, name: 'Retro Shades', price: 65, emoji: '🕶️' },
+        { id: 5, name: 'Pulse Buds', price: 150, emoji: '🎧' },
+        { id: 6, name: 'Smart Ring', price: 199, emoji: '💍' }
+    ],
+    get cartTotal() { 
+        return this.cart.reduce((sum, item) => sum + item.price, 0);
+    }
+}">
+
+    <nav>
+        <div style="font-weight: 700; font-size: 1.5rem;">Velvet<span>Shop</span></div>
+        <div class="cart-trigger" s-click="isCartOpen = true">
+            🛒 <span class="cart-count">{cart.length}</span>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Summer Glow Collection</h1>
+        <p>Premium essentials for the modern lifestyle.</p>
+    </section>
+
+    <div class="container">
+        <div class="products-grid">
+            <div s-for="p in products" class="product-card">
+                <div class="product-img">{p.emoji}</div>
+                <div class="product-info">
+                    <h3 style="font-size: 1.125rem;">{p.name}</h3>
+                    <div class="product-price">${p.price}</div>
+                    <button class="add-btn" s-click="cart.push(p)">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" s-class="{ open: isCartOpen }" s-click="if($event.target.className === 'cart-overlay open') isCartOpen = false">
+        <div class="cart-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1.5rem;">Your Cart</h2>
+                <button s-click="isCartOpen = false" style="background: none; font-size: 1.5rem;">✕</button>
+            </div>
+
+            <ul class="cart-items">
+                <li s-if="cart.length === 0" style="text-align: center; margin-top: 3rem; color: #9ca3af;">
+                    Your cart is empty.
+                </li>
+                <li s-for="item, i in cart" class="cart-item">
+                    <div class="cart-item-img">{item.emoji}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">{item.name}</div>
+                        <div style="color: var(--primary);">${item.price}</div>
+                    </div>
+                    <button s-click="cart.splice(i, 1)" style="color: #ef4444; background: none;">Remove</button>
+                </li>
+            </ul>
+
+            <div class="total-box">
+                <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem;">
+                    <span>Total:</span>
+                    <span>${cartTotal}</span>
+                </div>
+                <button class="add-btn" s-click="alert('Proceeding to checkout with $' + cartTotal)">Checkout Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { directives } from '../packages/simplijs/src/index.js';
+    </script>
+</body>
+</html>

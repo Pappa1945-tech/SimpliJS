@@ -10,6 +10,7 @@ async function runTests() {
     await import('./component.test.js');
     await import('./form.test.js');
     await import('./router.test.js');
+    await import('./directives.test.js');
     await import('./async.test.js');
     
     console.log('\nAll tests passed successfully! 🚀');
