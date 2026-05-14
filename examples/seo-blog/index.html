@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- simpli-head -->
+    <style>
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; background: #fdfdfd; }
+        nav { margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+        nav a { margin-right: 1.5rem; text-decoration: none; color: #333; font-weight: 600; }
+        nav a:hover { color: #007bff; }
+        .content { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        h1 { color: #111; }
+        .post-card { border: 1px solid #eee; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; background: white; transition: transform 0.2s; }
+        .post-card:hover { transform: translateY(-4px); border-color: #007bff; }
+        .post-card a { text-decoration: none; color: inherit; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+    </nav>
+
+    <main id="app">
+        <!-- simpli-app -->
+    </main>
+
+    <script type="module">
+        import { createApp, createRouter, useHead } from '../../src/index.js';
+
+        const posts = {
+            1: { title: "SSR in SimpliJS", content: "Pre-rendering makes your app faster and SEO friendly." },
+            2: { title: "Zero Server Needed", content: "Host your SSG app on GitHub Pages with ease." }
+        };
+
+        const pages = {
+            home: () => {
+                useHead({
+                    title: 'SimpliJS SEO Blog - Home',
+                    meta: [{ name: 'description', content: 'A high-perf blog build with SimpliJS SSG' }]
+                });
+                return `
+                    <h1>Welcome to SimpliBlog</h1>
+                    <div class="post-list">
+                        ${Object.entries(posts).map(([id, p]) => `
+                            <div class="post-card">
+                                <a href="/post/${id}">
+                                    <h2>${p.title}</h2>
+                                    <p>Click to read more...</p>
+                                </a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+            about: () => {
+                useHead({ title: 'About SimpliJS SSG' });
+                return `<h1>About</h1><p>This demo shows off History API and SSG.</p>`;
+            },
+            post: (id) => {
+                const post = posts[id];
+                if (!post) return '<h1>404</h1>';
+                useHead({ title: post.title });
+                return `<h1>${post.title}</h1><p>${post.content}</p><a href="/">&larr; Back</a>`;
+            }
+        };
+
+        const router = createRouter({
+            '/': pages.home,
+            '/about': pages.about,
+            '*': () => {
+                const path = window.location.pathname;
+                if (path.startsWith('/post/')) {
+                    return pages.post(path.split('/')[2]);
+                }
+                return '<h1>404 Not Found</h1>';
+            }
+        }, { mode: 'history' });
+
+        createApp('#app').mount();
+    </script>
+</body>
+</html>

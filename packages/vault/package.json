@@ -1,0 +1,12 @@
+{
+  "name": "@simplijs/vault-pro",
+  "version": "1.0.0",
+  "description": "Professional state management with time travel and persistence for SimpliJS",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@simplijs/simplijs": "*"
+  }
+}

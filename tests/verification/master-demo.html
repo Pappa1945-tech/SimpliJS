@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- simpli-head -->
+    <style>
+        .is-invalid { border: 2px solid red; }
+        .loading { opacity: 0.5; }
+        .active { font-weight: bold; color: purple; }
+    </style>
+</head>
+<body>
+    <div id="app" s-app s-state="{ count: 0, msg: 'Hello', items: ['A', 'B'], show: true, name: '', email: '', loading: false }">
+        
+        <!-- SECTION 1: CORE REACTIVITY & INTERPOLATION (Features 11, 12, 19) -->
+        <section id="reactivity">
+            <h1>Reactivity: {count}</h1>
+            <p>Message: {msg}</p>
+        </section>
+
+        <!-- SECTION 2: LOOPS & CONDITIONALS (Features 25, 26, 27, 28, 29, 30, 31) -->
+        <section id="flow">
+            <ul s-for="item, i in items" s-key="item">
+                <li>{i}: {item}</li>
+            </ul>
+            <div s-if="show">Conditional Content (s-if)</div>
+            <div s-else>Else Content</div>
+            <div s-show="show">Visible Content (s-show)</div>
+            <div s-hide="!show">Hidden Content (s-hide)</div>
+            <button s-click="show = !show">Toggle Flow</button>
+        </section>
+
+        <!-- SECTION 3: BINDING & ATTRIBUTES (Features 17, 18, 21, 22, 23, 24) -->
+        <section id="binding">
+            <input s-bind="name" placeholder="Name (2-way)">
+            <p s-text="name"></p>
+            <input s-value="msg" placeholder="Msg (1-way)">
+            <div s-attr:title="msg" s-class="{ active: show }" s-style="{ color: show ? 'green' : 'red' }">Styled/Attributed Div</div>
+        </section>
+
+        <!-- SECTION 4: EVENTS & INTERACTIVITY (Features 32, 33, 34, 35, 36, 37) -->
+        <section id="interactivity">
+            <button s-click="count++">Add</button>
+            <div s-hover="msg = 'Hovered!'">Hover Me</div>
+            <input s-input="msg = event.target.value" placeholder="Live Input">
+            <input s-key:enter="alert('Enter!')" placeholder="Press Enter">
+        </section>
+
+        <!-- SECTION 5: FORMS & VALIDATION (Features 38, 39, 40) -->
+        <section id="forms">
+            <form s-submit="alert('Submitted: ' + email)">
+                <input s-bind="email" s-validate="required" placeholder="Email">
+                <span s-error="email"></span>
+                <button type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 6: ASYNC DATA (Features 41, 42, 43, 46) -->
+        <section id="async">
+            <div s-fetch="'/api/mock-data'">
+                <div s-loading>Loading...</div>
+                <div s-error>Failed to load.</div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: COMPONENTS & SLOTS (Features 1, 3, 4, 8, 9, 44, 45, 47) -->
+        <section id="components">
+            <test-comp s-prop:title="msg">
+                <p s-slot="content">Slotted Content</p>
+            </test-comp>
+        </section>
+
+        <!-- SECTION 8: SPA ROUTING (Features 47, 48, 49) -->
+        <section id="routing">
+            <nav>
+                <a s-link="/">Home</a> | <a s-link="/about">About</a>
+            </nav>
+            <div s-view>
+                <div s-route="/">Home Route</div>
+                <div s-route="/about">About Route</div>
+            </div>
+        </section>
+
+        <!-- SECTION 9: PERFORMANCE (Features 50, 51, 52, 53, 54) -->
+        <section id="performance">
+            <div s-memo="count">Memoized: {count}</div>
+            <div s-once>Once: {count}</div>
+            <input s-ref="myInput" placeholder="Ref Input">
+            <div s-ignore>Ignored (Native HTML)</div>
+        </section>
+
+    </div>
+
+    <!-- MOCK DATA FOR FETCH -->
+    <script type="application/json" id="mock-api">
+        { "status": "ok", "data": "Mocked Content" }
+    </script>
+
+    <script type="module">
+        import { component, setSEO, setThemeColor, setBreadcrumbs, setJsonLd } from '../../src/index.js';
+
+        // Feature 1, 3, 4, 8, 9 (Component API)
+        component('test-comp', (el, props) => {
+            return {
+                onMount: () => console.log('Test Comp Mounted'),
+                render: () => `
+                    <div class="comp">
+                        <h2>${props.title}</h2>
+                        <slot name="content"></slot>
+                    </div>
+                `
+            }
+        });
+
+        // SSR/SEO Feature Setup
+        setSEO({
+            title: 'Master Verification | SimpliJS',
+            description: 'The ultimate checklist for SimpliJS features.',
+            url: 'https://simplijs.org/verify',
+            image: 'https://simplijs.org/og.png'
+        });
+        setThemeColor('#6a0dad');
+        setBreadcrumbs([
+            { name: 'Home', url: '/' },
+            { name: 'Verify', url: '/verify' }
+        ]);
+    </script>
+</body>
+</html>

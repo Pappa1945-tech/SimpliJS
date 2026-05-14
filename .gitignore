@@ -1,0 +1,38 @@
+# Node.js / npm / yarn / pnpm dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npmrc
+.yarn/
+.pnp.*
+
+# Build / dist outputs
+dist/
+build/
+.next/
+out/
+
+# Editor / IDE files
+.vs/
+.vscode/
+*.code-workspace
+.idea/
+*.sublime-*
+
+# macOS / Windows junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Optional: your local experiments
+playground/
+temp/

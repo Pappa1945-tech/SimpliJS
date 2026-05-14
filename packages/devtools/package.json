@@ -1,0 +1,12 @@
+{
+  "name": "@simplijs/devtools",
+  "version": "1.0.0",
+  "description": "Visual debugging and profiling for SimpliJS",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@simplijs/simplijs": "*"
+  }
+}
